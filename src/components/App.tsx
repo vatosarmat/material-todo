@@ -104,6 +104,14 @@ class App extends React.Component<Props, State> {
     this.setNewContent(true);
   }
 
+  handleKeyDownItemTitle = (targetIndex: number, evt: KeyboardEvent<HTMLElement>) => {
+    if(evt.key === 'Enter') {
+      this.setNewContent(true);
+    } else if(evt.key === 'Escape') {
+      this.setNewContent(false);
+    }
+  }
+
   setNewContent(set: boolean) {
     if(set) {
       this.setState((state: State) => {
@@ -147,6 +155,7 @@ class App extends React.Component<Props, State> {
                    ref={thisInput => this.currentInput = thisInput}
                    onChange={this.handleChangeItemTitle.bind(this, idx)}
                    onBlur={this.handleBlurItemTitle.bind(this, idx)}
+                   onKeyDown={this.handleKeyDownItemTitle.bind(this, idx)}
                    value={editEntity.newContent.title}
             /> :
             <div className={CLASS.TodoItemTitle}
