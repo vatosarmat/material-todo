@@ -1,9 +1,11 @@
-import React, {KeyboardEvent, RefObject, SyntheticEvent} from 'react';
+import React, {
+  FormEvent, KeyboardEvent, SyntheticEvent,
+  RefObject
+} from 'react';
 import {Card, ListGroup, ListGroupItem} from "react-bootstrap"
-
-import './App.scss'
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome"
 
+import './App.scss'
 
 const CLASS = {
   TodoItem: 'todo-item',
@@ -11,20 +13,28 @@ const CLASS = {
   TodoItemTitle: 'todo-item-title',
 }
 
+interface Entity {
+  id: number;
+  title: string;
+  done: boolean;
+}
+
 interface Props {
 }
 
 interface State {
-  entities: {
-    id: number;
-    title: string;
-    done: boolean;
-  }[]
+  entities: Entity[],
+  editEntity: null | {
+    index: number,
+    newContent: {
+      title: string
+    }
+  }
 }
 
 class App extends React.Component<Props, State> {
 
-  state = {
+  state: State = {
     entities: [
       {
         id: 1,
@@ -46,91 +56,104 @@ class App extends React.Component<Props, State> {
         title: 'Clean house',
         done: false
       }
-    ]
+    ],
+    editEntity: null
   }
 
-  itemRefs:RefObject<HTMLDivElement>[] = []
+  currentInput:HTMLInputElement|null = null
 
-  constructor(props: Props) {
-    super(props);
-
-    const {entities} = this.state;
-    this.itemRefs = entities.map( _ => React.createRef<HTMLDivElement>());
-  }
-
-  componentDidMount(): void {
-    for(let i = 0; i < this.state.entities.length; i++) {
-      (this.itemRefs[i].current as HTMLElement).textContent = this.state.entities[i].title;
-    }
-  }
-
-  getTargetItemKey(evt: SyntheticEvent) {
-    evt.preventDefault();
-    const target = evt.target as HTMLElement;
-
-    if(!target) {
-      return;
-    }
-
-    const todoItem = target.closest('.'+CLASS.TodoItem) as HTMLElement;
-
-    if(!todoItem) {
-      return;
-    }
-
-    return Number(todoItem.dataset.key);
-  }
-
-  handleItemKeyDown = (evt: KeyboardEvent) => {
-    if(evt.key === 'Enter' || evt.key === 'Escape') {
-      evt.preventDefault();
-      //(evt.target as HTMLElement).blur();
-    }
-  }
-
-  handleItemCheck = (evt: SyntheticEvent) => {
-    const key = this.getTargetItemKey(evt);
-
-    this.setState( state => ({
-      entities: state.entities.map(ent => ent.id === key ? {...ent, done: !ent.done} : ent)
+  handleClickItemTitle = (targetIndex: number, evt: SyntheticEvent<HTMLElement>) => {
+    this.setState(state  => ({
+      editEntity: {
+        index: targetIndex,
+        newContent: {
+          title: state.entities[targetIndex].title
+        }
+      }
     }))
   }
 
-  handleItemTitleInput = (evt: SyntheticEvent) => {
-    const key = this.getTargetItemKey(evt);
+  handleClickItemCheck = (targetIndex: number, evt: SyntheticEvent<HTMLElement>) => {
+    this.setState(state => ({
+      entities: state.entities.map((ent, idx) =>
+          idx === targetIndex ? {...ent, done: !ent.done} : ent
+      )
+    }))
+  }
 
-    let inputIdx:number;
+  handleChangeItemTitle = (targetIndex: number, evt: FormEvent<HTMLInputElement>) => {
+    const {currentTarget:{value}} = evt;
 
-    this.setState( {
-      entities: this.state.entities.map((ent, idx) => {
-        if(ent.id === key) {
-          inputIdx = idx;
-          return {...ent, title: String( (this.itemRefs[idx].current as HTMLElement).textContent)}
+    this.setState((state: State) => {
+      if(state.editEntity) {
+        return {
+          editEntity: {
+            ...state.editEntity,
+            newContent: {
+              ...state.editEntity.newContent,
+              title: value
+            }
+          }
         }
-
-        return ent;
-      })
-    }, () => {
-      (this.itemRefs[inputIdx].current as HTMLElement).textContent = this.state.entities[inputIdx].title;
+      }
+      return state
     })
   }
 
+  handleBlurItemTitle = (targetIndex: number, evt: SyntheticEvent<HTMLElement>) => {
+    this.setNewContent(true);
+  }
+
+  setNewContent(set: boolean) {
+    if(set) {
+      this.setState((state: State) => {
+        if(state.editEntity) {
+          const {index, newContent} = state.editEntity;
+          return {
+            entities: state.entities.map((ent, idx) => idx === index ? {...ent, ...newContent} : ent),
+            editEntity: null
+          }
+        }
+        return state
+      })
+    } else {
+      this.setState({
+        editEntity: null
+      })
+    }
+  }
+
+  componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any): void {
+    if(this.currentInput) {
+      this.currentInput.focus();
+    }
+  }
+
   renderList() {
-    const {entities} = this.state;
+    const {entities, editEntity} = this.state;
 
     return entities.map((ent, idx) =>
         <ListGroupItem as="li" action className={`${CLASS.TodoItem} d-flex`}
-                       key={ent.id} /*eventKey={ent.id}*/ data-key={ent.id}
+                       key={ent.id} /*eventKey={ent.id}*/
         >
-          <div className="mr-2" onClick={this.handleItemCheck}>
+          <div className="mr-2" onClick={this.handleClickItemCheck.bind(this, idx)}>
             <FontAwesomeIcon
                 icon={ent.done ? ['fas', 'check-circle'] : ['far', 'circle']} size="lg"
                 className={CLASS.TodoItemCheck}
             />
           </div>
-          <div className={CLASS.TodoItemTitle}
-               contentEditable ref={this.itemRefs[idx]}
-               onKeyDown={this.handleItemKeyDown} onInput={this.handleItemTitleInput} />
+          { editEntity && editEntity.index === idx ?
+            <input className={CLASS.TodoItemTitle}
+                   ref={thisInput => this.currentInput = thisInput}
+                   onChange={this.handleChangeItemTitle.bind(this, idx)}
+                   onBlur={this.handleBlurItemTitle.bind(this, idx)}
+                   value={editEntity.newContent.title}
+            /> :
+            <div className={CLASS.TodoItemTitle}
+                 onClick={this.handleClickItemTitle.bind(this, idx)}>
+              {ent.title}
+            </div>
+          }
         </ListGroupItem>
     )
   }

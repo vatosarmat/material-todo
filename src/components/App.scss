@@ -10,3 +10,12 @@
 .todo-item-check {
   cursor: pointer;
 }
+
+.todo-item-title {
+  display: block;
+  border: 0;
+}
+
+input.todo-item-title {
+  //background-color: hsla(60, 100%, 50%, .3);
+}
