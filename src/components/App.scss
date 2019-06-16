@@ -1,5 +1,5 @@
 .App {
-  width: 70%;
+  width: 50%;
   margin: {
     left: auto;
     right: auto;
@@ -7,13 +7,27 @@
   }
 }
 
-.todo-item-check {
+.todo-item {
+  display: flex;
+}
+
+.todo-item-check, .todo-item:last-of-type {
   cursor: pointer;
+
+  &:hover {
+    opacity: .7;
+  }
 }
 
 .todo-item-title {
   display: block;
+  flex-grow: 1;
   border: 0;
+  padding-left: .5em;
+
+  &:hover {
+    cursor: text;
+  }
 }
 
 input.todo-item-title {

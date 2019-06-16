@@ -10,6 +10,7 @@ import './App.scss'
 const CLASS = {
   TodoItem: 'todo-item',
   TodoItemCheck: 'todo-item-check',
+  TodoItemAdd: 'todo-item-add',
   TodoItemTitle: 'todo-item-title',
 }
 
@@ -67,7 +68,7 @@ class App extends React.Component<Props, State> {
       editEntity: {
         index: targetIndex,
         newContent: {
-          title: state.entities[targetIndex].title
+          title: targetIndex >= state.entities.length ? '' : state.entities[targetIndex].title
         }
       }
     }))
@@ -112,13 +113,24 @@ class App extends React.Component<Props, State> {
     }
   }
 
+  handleClickItemAdd = () => {
+
+  }
+
   setNewContent(set: boolean) {
     if(set) {
       this.setState((state: State) => {
         if(state.editEntity) {
           const {index, newContent} = state.editEntity;
+          const {length} = state.entities;
+
           return {
-            entities: state.entities.map((ent, idx) => idx === index ? {...ent, ...newContent} : ent),
+            entities: index >= length ? [...state.entities, {
+                  ...newContent,
+                  id: state.entities[length - 1].id + 1,
+                  done: false
+                } ] :
+                state.entities.map((ent, idx) => idx === index ? {...ent, ...newContent} : ent),
             editEntity: null
           }
         }
@@ -141,10 +153,12 @@ class App extends React.Component<Props, State> {
     const {entities, editEntity} = this.state;
 
     return entities.map((ent, idx) =>
-        <ListGroupItem as="li" action className={`${CLASS.TodoItem} d-flex`}
+        <ListGroupItem as="li" action
+                       className={`${CLASS.TodoItem}`}
                        key={ent.id} /*eventKey={ent.id}*/
         >
-          <div className="mr-2" onClick={this.handleClickItemCheck.bind(this, idx)}>
+          <div className='text-primary mr-2'
+               onClick={this.handleClickItemCheck.bind(this, idx)}>
             <FontAwesomeIcon
                 icon={ent.done ? ['fas', 'check-circle'] : ['far', 'circle']} size="lg"
                 className={CLASS.TodoItemCheck}
@@ -168,14 +182,36 @@ class App extends React.Component<Props, State> {
   }
 
   render() {
+    const {entities, editEntity} = this.state;
+
     return (
         <Card className="App">
           <Card.Header as="h3">
             TODO app
           </Card.Header>
-          <Card.Body>
-            <ListGroup as="ul">
+          <Card.Body className='px-0'>
+            <ListGroup as="ul" variant="flush">
               {this.renderList()}
+              <ListGroupItem as="li" action className={`${CLASS.TodoItem} d-flex`}
+                             onClick={this.handleClickItemTitle.bind(this, entities.length)}
+              >
+                <div className='text-success mr-2'>
+                  <FontAwesomeIcon
+                      icon={['fas', 'plus-circle']} size="lg"
+                      className={CLASS.TodoItemAdd}
+                  />
+                </div>
+                {
+                  editEntity && editEntity.index >= entities.length &&
+                  <input className={CLASS.TodoItemTitle}
+                         ref={thisInput => this.currentInput = thisInput}
+                         onChange={this.handleChangeItemTitle.bind(this, editEntity.index)}
+                         onBlur={this.handleBlurItemTitle.bind(this, editEntity.index)}
+                         onKeyDown={this.handleKeyDownItemTitle.bind(this, editEntity.index)}
+                         value={editEntity.newContent.title}
+                  />
+                }
+              </ListGroupItem>
             </ListGroup>
           </Card.Body>
         </Card>
