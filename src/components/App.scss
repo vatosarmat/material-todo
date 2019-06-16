@@ -9,9 +9,15 @@
 
 .todo-item {
   display: flex;
+
+  &:hover {
+    .todo-item-delete {
+      visibility: visible;
+    }
+  }
 }
 
-.todo-item-check, .todo-item:last-of-type {
+.todo-item-check, .todo-item-delete, .todo-item:last-of-type {
   cursor: pointer;
 
   &:hover {
@@ -30,6 +36,6 @@
   }
 }
 
-input.todo-item-title {
-  //background-color: hsla(60, 100%, 50%, .3);
+.todo-item-delete {
+  visibility: hidden;
 }

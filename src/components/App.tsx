@@ -11,6 +11,7 @@ const CLASS = {
   TodoItem: 'todo-item',
   TodoItemCheck: 'todo-item-check',
   TodoItemAdd: 'todo-item-add',
+  TodoItemDelete: 'todo-item-delete',
   TodoItemTitle: 'todo-item-title',
 }
 
@@ -31,6 +32,7 @@ interface State {
       title: string
     }
   }
+  nextId: number
 }
 
 class App extends React.Component<Props, State> {
@@ -58,7 +60,8 @@ class App extends React.Component<Props, State> {
         done: false
       }
     ],
-    editEntity: null
+    editEntity: null,
+    nextId: 5
   }
 
   currentInput:HTMLInputElement|null = null
@@ -113,8 +116,11 @@ class App extends React.Component<Props, State> {
     }
   }
 
-  handleClickItemAdd = () => {
-
+  handleClickItemDelete = (targetIndex: number, evt: SyntheticEvent<HTMLElement>) => {
+    this.setState( (state: State) => ({
+      entities: [...state.entities.slice(0, targetIndex), ...state.entities.slice(targetIndex+1)],
+      editEntity: null
+    }))
   }
 
   setNewContent(set: boolean) {
@@ -122,16 +128,21 @@ class App extends React.Component<Props, State> {
       this.setState((state: State) => {
         if(state.editEntity) {
           const {index, newContent} = state.editEntity;
-          const {length} = state.entities;
+
+          //nothing to set
+          if(Object.values(newContent).every(v => !v)) {
+            return {editEntity:null}
+          }
 
           return {
-            entities: index >= length ? [...state.entities, {
+            entities: index >=  state.entities.length ? [...state.entities, {
                   ...newContent,
-                  id: state.entities[length - 1].id + 1,
+                  id: state.nextId,
                   done: false
                 } ] :
                 state.entities.map((ent, idx) => idx === index ? {...ent, ...newContent} : ent),
-            editEntity: null
+            editEntity: null,
+            nextId: state.nextId + 1
           }
         }
         return state
@@ -157,12 +168,9 @@ class App extends React.Component<Props, State> {
                        className={`${CLASS.TodoItem}`}
                        key={ent.id} /*eventKey={ent.id}*/
         >
-          <div className='text-primary mr-2'
+          <div className={`${CLASS.TodoItemCheck} text-primary mr-2`}
                onClick={this.handleClickItemCheck.bind(this, idx)}>
-            <FontAwesomeIcon
-                icon={ent.done ? ['fas', 'check-circle'] : ['far', 'circle']} size="lg"
-                className={CLASS.TodoItemCheck}
-            />
+            <FontAwesomeIcon icon={ent.done ? ['fas', 'check-circle'] : ['far', 'circle']} size="lg"/>
           </div>
           { editEntity && editEntity.index === idx ?
             <input className={CLASS.TodoItemTitle}
@@ -177,6 +185,10 @@ class App extends React.Component<Props, State> {
               {ent.title}
             </div>
           }
+          <div className={`${CLASS.TodoItemDelete} text-danger ml-2`}
+               onClick={this.handleClickItemDelete.bind(this, idx)}>
+            <FontAwesomeIcon icon={['fas', 'minus-circle']} size="lg"/>
+          </div>
         </ListGroupItem>
     )
   }
@@ -195,11 +207,8 @@ class App extends React.Component<Props, State> {
               <ListGroupItem as="li" action className={`${CLASS.TodoItem} d-flex`}
                              onClick={this.handleClickItemTitle.bind(this, entities.length)}
               >
-                <div className='text-success mr-2'>
-                  <FontAwesomeIcon
-                      icon={['fas', 'plus-circle']} size="lg"
-                      className={CLASS.TodoItemAdd}
-                  />
+                <div className={`${CLASS.TodoItemAdd} text-success mr-2`}>
+                  <FontAwesomeIcon icon={['fas', 'plus-circle']} size="lg"/>
                 </div>
                 {
                   editEntity && editEntity.index >= entities.length &&
