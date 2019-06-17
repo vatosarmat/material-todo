@@ -34,8 +34,7 @@ interface State {
       title: string
     }
   }
-  nextId: number,
-  showDiv: boolean
+  nextId: number
 }
 
 class App extends React.Component<Props, State> {
@@ -64,8 +63,7 @@ class App extends React.Component<Props, State> {
       }
     ],
     editEntity: null,
-    nextId: 5,
-    showDiv: true
+    nextId: 5
   }
 
   currentInput:HTMLInputElement|null = null
@@ -203,10 +201,6 @@ class App extends React.Component<Props, State> {
           )}
         </TransitionGroup>
     )
-  }
-
-  handleClickButton = () => {
-    this.setState(state => ({...state, showDiv: !state.showDiv}))
   }
 
   render() {
