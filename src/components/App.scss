@@ -17,6 +17,10 @@
   }
 }
 
+.todo-item {
+  transition: all .5s;
+}
+
 .todo-item-check, .todo-item-delete, .todo-item:last-of-type {
   cursor: pointer;
 
@@ -39,3 +43,18 @@
 .todo-item-delete {
   visibility: hidden;
 }
+
+
+.todo-item-transition-exit {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.todo-item-transition-exit-active {
+  transform: translateX(100%);
+  opacity: 0;
+
+  transition: transform 500ms, opacity 500ms ease-in;
+}
+
+

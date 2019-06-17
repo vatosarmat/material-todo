@@ -2,13 +2,15 @@ import React, {
   FormEvent, KeyboardEvent, SyntheticEvent,
   RefObject
 } from 'react';
-import {Card, ListGroup, ListGroupItem} from "react-bootstrap"
+import {Badge, Card, Button, ListGroup, ListGroupItem} from "react-bootstrap"
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome"
+import { TransitionGroup, CSSTransition } from 'react-transition-group';
 
 import './App.scss'
 
 const CLASS = {
   TodoItem: 'todo-item',
+  TodoItemTransition: 'todo-item-transition',
   TodoItemCheck: 'todo-item-check',
   TodoItemAdd: 'todo-item-add',
   TodoItemDelete: 'todo-item-delete',
@@ -32,7 +34,8 @@ interface State {
       title: string
     }
   }
-  nextId: number
+  nextId: number,
+  showDiv: boolean
 }
 
 class App extends React.Component<Props, State> {
@@ -61,7 +64,8 @@ class App extends React.Component<Props, State> {
       }
     ],
     editEntity: null,
-    nextId: 5
+    nextId: 5,
+    showDiv: true
   }
 
   currentInput:HTMLInputElement|null = null
@@ -163,37 +167,50 @@ class App extends React.Component<Props, State> {
   renderList() {
     const {entities, editEntity} = this.state;
 
-    return entities.map((ent, idx) =>
-        <ListGroupItem as="li" action
-                       className={`${CLASS.TodoItem}`}
-                       key={ent.id} /*eventKey={ent.id}*/
-        >
-          <div className={`${CLASS.TodoItemCheck} text-primary mr-2`}
-               onClick={this.handleClickItemCheck.bind(this, idx)}>
-            <FontAwesomeIcon icon={ent.done ? ['fas', 'check-circle'] : ['far', 'circle']} size="lg"/>
-          </div>
-          { editEntity && editEntity.index === idx ?
-            <input className={CLASS.TodoItemTitle}
-                   ref={thisInput => this.currentInput = thisInput}
-                   onChange={this.handleChangeItemTitle.bind(this, idx)}
-                   onBlur={this.handleBlurItemTitle.bind(this, idx)}
-                   onKeyDown={this.handleKeyDownItemTitle.bind(this, idx)}
-                   value={editEntity.newContent.title}
-            /> :
-            <div className={CLASS.TodoItemTitle}
-                 onClick={this.handleClickItemTitle.bind(this, idx)}>
-              {ent.title}
-            </div>
-          }
-          <div className={`${CLASS.TodoItemDelete} text-danger ml-2`}
-               onClick={this.handleClickItemDelete.bind(this, idx)}>
-            <FontAwesomeIcon icon={['fas', 'minus-circle']} size="lg"/>
-          </div>
-        </ListGroupItem>
+    return (
+        <TransitionGroup component={null} appear={false} enter={false}>
+          {entities.map((ent, idx) =>
+              <CSSTransition
+                  key={ent.id}
+                  timeout={500}
+                  classNames={CLASS.TodoItemTransition}
+              >
+                <ListGroupItem as="li" action
+                               className={`${CLASS.TodoItem}`}
+                >
+                  <div className={`${CLASS.TodoItemCheck} text-primary mr-2`}
+                       onClick={this.handleClickItemCheck.bind(this, idx)}>
+                    <FontAwesomeIcon icon={ent.done ? ['fas', 'check-circle'] : ['far', 'circle']} size="lg"/>
+                  </div>
+                  {editEntity && editEntity.index === idx ?
+                      <input className={CLASS.TodoItemTitle}
+                             ref={thisInput => this.currentInput = thisInput}
+                             onChange={this.handleChangeItemTitle.bind(this, idx)}
+                             onBlur={this.handleBlurItemTitle.bind(this, idx)}
+                             onKeyDown={this.handleKeyDownItemTitle.bind(this, idx)}
+                             value={editEntity.newContent.title}
+                      /> :
+                      <div className={CLASS.TodoItemTitle + (ent.done ? ' text-black-50' : ' text-body')}
+                           onClick={this.handleClickItemTitle.bind(this, idx)}>
+                        {ent.title}
+                      </div>
+                  }
+                  <div className={`${CLASS.TodoItemDelete} text-danger ml-2`}
+                       onClick={this.handleClickItemDelete.bind(this, idx)}>
+                    <FontAwesomeIcon icon={['fas', 'minus-circle']} size="lg"/>
+                  </div>
+                </ListGroupItem></CSSTransition>
+          )}
+        </TransitionGroup>
     )
   }
 
+  handleClickButton = () => {
+    this.setState(state => ({...state, showDiv: !state.showDiv}))
+  }
+
   render() {
+
     const {entities, editEntity} = this.state;
 
     return (
