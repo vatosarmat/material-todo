@@ -1,201 +1,188 @@
 import React, {
-  FormEvent, KeyboardEvent, SyntheticEvent,
-  RefObject
+  Component, ReactEventHandler, KeyboardEventHandler
 } from 'react';
-import {Badge, Card, Button, ListGroup, ListGroupItem} from "react-bootstrap"
+import {Card, ListGroup, ListGroupItem} from "react-bootstrap"
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome"
 import { TransitionGroup, CSSTransition } from 'react-transition-group';
+import {connect} from 'react-redux'
 
+import {itemAction, State, ItemUpdate, ItemData} from "../stateStorage"
 import './App.scss'
 
 const CLASS = {
   TodoItem: 'todo-item',
+  TodoItemContent: 'todo-item-content',
   TodoItemTransition: 'todo-item-transition',
-  TodoItemCheck: 'todo-item-check',
-  TodoItemAdd: 'todo-item-add',
-  TodoItemDelete: 'todo-item-delete',
+  TodoItemIconToggle: 'todo-item-icon-toggle',
+  TodoItemIconAdd: 'todo-item-icon-add',
+  TodoItemIconRemove: 'todo-item-icon-remove',
   TodoItemTitle: 'todo-item-title',
 }
 
-interface Entity {
-  id: number;
-  title: string;
-  done: boolean;
+const ID = {
+  TodoItemAdd: 'todo-item-add'
 }
 
-interface Props {
+
+interface ComponentProps {
+  items: State['items']
+
+  itemAdd: typeof itemAction.add,
+  itemToggle: typeof itemAction.toggle,
+  itemRemove: typeof itemAction.remove,
+  itemEdit: typeof itemAction.edit
 }
 
-interface State {
-  entities: Entity[],
-  editEntity: null | {
-    index: number,
-    newContent: {
-      title: string
-    }
-  }
-  nextId: number
+interface ComponentState {
+  addItem: ItemData | null,
+  editItem: ItemUpdate | null
 }
 
-class App extends React.Component<Props, State> {
 
-  state: State = {
-    entities: [
-      {
-        id: 1,
-        title: 'Fix car',
-        done: false
-      },
-      {
-        id: 2,
-        title: 'Buy some food',
-        done: true
-      },
-      {
-        id: 3,
-        title: 'Go to doctor',
-        done: false
-      },
-      {
-        id: 4,
-        title: 'Clean house',
-        done: false
-      }
-    ],
-    editEntity: null,
-    nextId: 5
+class App extends Component<ComponentProps, ComponentState> {
+
+  state:ComponentState = {
+    addItem: null,
+    editItem: null
   }
 
   currentInput:HTMLInputElement|null = null
 
-  handleClickItemTitle = (targetIndex: number, evt: SyntheticEvent<HTMLElement>) => {
-    this.setState(state  => ({
-      editEntity: {
-        index: targetIndex,
-        newContent: {
-          title: targetIndex >= state.entities.length ? '' : state.entities[targetIndex].title
-        }
+  handleClickItemTitle:ReactEventHandler<HTMLElement> = evt => {
+    const {items} = this.props
+    const itemElement = evt.currentTarget.closest('.'+CLASS.TodoItemContent)
+
+    if(itemElement) {
+      const item = items.find(it => it.id === itemElement.id);
+      if(item) {
+        this.setState({
+          editItem: item,
+          addItem: null
+        })
       }
-    }))
+    }
   }
 
-  handleClickItemCheck = (targetIndex: number, evt: SyntheticEvent<HTMLElement>) => {
-    this.setState(state => ({
-      entities: state.entities.map((ent, idx) =>
-          idx === targetIndex ? {...ent, done: !ent.done} : ent
-      )
-    }))
+  handleClickItemToggle:ReactEventHandler<HTMLElement> = evt => {
+    const {itemToggle} = this.props;
+    const itemElement = evt.currentTarget.closest('.'+CLASS.TodoItemContent);
+
+    if(itemElement) {
+      itemToggle(itemElement);
+    }
   }
 
-  handleChangeItemTitle = (targetIndex: number, evt: FormEvent<HTMLInputElement>) => {
-    const {currentTarget:{value}} = evt;
-
-    this.setState((state: State) => {
-      if(state.editEntity) {
-        return {
-          editEntity: {
-            ...state.editEntity,
-            newContent: {
-              ...state.editEntity.newContent,
-              title: value
-            }
-          }
-        }
+  handleClickItemAdd:ReactEventHandler<HTMLElement> = evt => {
+    this.setState({
+      editItem: null,
+      addItem: {
+        title: ''
       }
-      return state
     })
   }
 
-  handleBlurItemTitle = (targetIndex: number, evt: SyntheticEvent<HTMLElement>) => {
-    this.setNewContent(true);
-  }
+  handleClickItemDelete:ReactEventHandler<HTMLElement> = evt => {
+    const {itemRemove} = this.props;
+    const itemElement = evt.currentTarget.closest('.'+CLASS.TodoItemContent);
 
-  handleKeyDownItemTitle = (targetIndex: number, evt: KeyboardEvent<HTMLElement>) => {
-    if(evt.key === 'Enter') {
-      this.setNewContent(true);
-    } else if(evt.key === 'Escape') {
-      this.setNewContent(false);
+    if(itemElement) {
+      itemRemove(itemElement)
     }
   }
 
-  handleClickItemDelete = (targetIndex: number, evt: SyntheticEvent<HTMLElement>) => {
-    this.setState( (state: State) => ({
-      entities: [...state.entities.slice(0, targetIndex), ...state.entities.slice(targetIndex+1)],
-      editEntity: null
+  handleChangeItemTitle:ReactEventHandler<HTMLInputElement> = evt => {
+    const {currentTarget:{value}} = evt;
+
+    this.setState(state => ({
+      editItem: state.editItem ? {
+        ...state.editItem,
+        title: value
+      } : null,
+
+      addItem: state.addItem ? {
+        ...state.addItem,
+        title: value
+      } : null
     }))
   }
 
-  setNewContent(set: boolean) {
-    if(set) {
-      this.setState((state: State) => {
-        if(state.editEntity) {
-          const {index, newContent} = state.editEntity;
+  handleBlurItemTitle:ReactEventHandler<HTMLInputElement> = evt => {
+    this.setNewContent(true)
+  }
 
-          //nothing to set
-          if(Object.values(newContent).every(v => !v)) {
-            return {editEntity:null}
-          }
-
-          return {
-            entities: index >=  state.entities.length ? [...state.entities, {
-                  ...newContent,
-                  id: state.nextId,
-                  done: false
-                } ] :
-                state.entities.map((ent, idx) => idx === index ? {...ent, ...newContent} : ent),
-            editEntity: null,
-            nextId: state.nextId + 1
-          }
-        }
-        return state
-      })
-    } else {
-      this.setState({
-        editEntity: null
-      })
+  handleKeyDownItemTitle:KeyboardEventHandler<HTMLInputElement> = evt => {
+    if(evt.key === 'Enter') {
+      this.setNewContent(true)
+    } else if(evt.key === 'Escape') {
+      this.setNewContent(false)
     }
   }
 
-  componentDidUpdate(prevProps: Readonly<Props>, prevState: Readonly<State>, snapshot?: any): void {
+  setNewContent(set: boolean) {
+
+    if(set) {
+      const {itemAdd, itemEdit} = this.props;
+      const {addItem, editItem} = this.state;
+
+      if(addItem) {
+        itemAdd(addItem)
+      } else if(editItem) {
+        itemEdit(editItem)
+      }
+    }
+
+    this.setState({
+      editItem: null,
+      addItem: null
+    })
+  }
+
+  componentDidUpdate(prevProps: Readonly<ComponentProps>,
+                     prevState: Readonly<ComponentState>,
+                     snapshot?: any): void {
     if(this.currentInput) {
       this.currentInput.focus();
     }
   }
 
   renderList() {
-    const {entities, editEntity} = this.state;
+
+    const {items} = this.props
+    const {editItem} = this.state
 
     return (
         <TransitionGroup component={null} appear={false} enter={false}>
-          {entities.map((ent, idx) =>
+          {items.map(ent  =>
               <CSSTransition
-                  key={ent.id}
                   timeout={500}
                   classNames={CLASS.TodoItemTransition}
+                  key={ent.id}
               >
                 <ListGroupItem as="li" action
-                               className={`${CLASS.TodoItem}`}
+                               className={CLASS.TodoItem}
                 >
-                  <div className={`${CLASS.TodoItemCheck} text-primary mr-2`}
-                       onClick={this.handleClickItemCheck.bind(this, idx)}>
-                    <FontAwesomeIcon icon={ent.done ? ['fas', 'check-circle'] : ['far', 'circle']} size="lg"/>
-                  </div>
-                  {editEntity && editEntity.index === idx ?
-                      <input className={CLASS.TodoItemTitle}
-                             ref={thisInput => this.currentInput = thisInput}
-                             onChange={this.handleChangeItemTitle.bind(this, idx)}
-                             onBlur={this.handleBlurItemTitle.bind(this, idx)}
-                             onKeyDown={this.handleKeyDownItemTitle.bind(this, idx)}
-                             value={editEntity.newContent.title}
-                      /> :
-                      <div className={CLASS.TodoItemTitle + (ent.done ? ' text-black-50' : ' text-body')}
-                           onClick={this.handleClickItemTitle.bind(this, idx)}>
-                        {ent.title}
-                      </div>
-                  }
-                  <div className={`${CLASS.TodoItemDelete} text-danger ml-2`}
-                       onClick={this.handleClickItemDelete.bind(this, idx)}>
-                    <FontAwesomeIcon icon={['fas', 'minus-circle']} size="lg"/>
+                  <div className={CLASS.TodoItemContent} id={ent.id}>
+                    <div className={`${CLASS.TodoItemIconToggle} text-primary mr-2`}
+                         onClick={this.handleClickItemToggle}>
+                      <FontAwesomeIcon icon={ent.done ? ['fas', 'check-circle'] : ['far', 'circle']} size="lg"/>
+                    </div>
+                    {editItem && editItem.id === ent.id ?
+                        <input className={CLASS.TodoItemTitle}
+                               ref={thisInput => this.currentInput = thisInput}
+                               onChange={this.handleChangeItemTitle}
+                               onBlur={this.handleBlurItemTitle}
+                               onKeyDown={this.handleKeyDownItemTitle}
+                               value={editItem.title}
+                        /> :
+                        <div className={CLASS.TodoItemTitle + (ent.done ? ' text-black-50' : ' text-body')}
+                             onClick={this.handleClickItemTitle}>
+                          {ent.title}
+                        </div>
+                    }
+                    <div className={`${CLASS.TodoItemIconRemove} text-danger ml-2`}
+                         onClick={this.handleClickItemDelete}>
+                      <FontAwesomeIcon icon={['fas', 'minus-circle']} size="lg"/>
+                    </div>
                   </div>
                 </ListGroupItem></CSSTransition>
           )}
@@ -205,7 +192,7 @@ class App extends React.Component<Props, State> {
 
   render() {
 
-    const {entities, editEntity} = this.state;
+    const {addItem} = this.state
 
     return (
         <Card className="App">
@@ -215,22 +202,24 @@ class App extends React.Component<Props, State> {
           <Card.Body className='px-0'>
             <ListGroup as="ul" variant="flush">
               {this.renderList()}
-              <ListGroupItem as="li" action className={`${CLASS.TodoItem} d-flex`}
-                             onClick={this.handleClickItemTitle.bind(this, entities.length)}
+              <ListGroupItem as="li" action className={CLASS.TodoItem}
+                             onClick={this.handleClickItemAdd}
               >
-                <div className={`${CLASS.TodoItemAdd} text-success mr-2`}>
-                  <FontAwesomeIcon icon={['fas', 'plus-circle']} size="lg"/>
+                <div className={CLASS.TodoItemContent} id={ID.TodoItemAdd}>
+                  <div className={`${CLASS.TodoItemIconAdd} text-success mr-2`}>
+                    <FontAwesomeIcon icon={['fas', 'plus-circle']} size="lg"/>
+                  </div>
+                  {
+                    addItem &&
+                    <input className={CLASS.TodoItemTitle}
+                           ref={thisInput => this.currentInput = thisInput}
+                           onChange={this.handleChangeItemTitle}
+                           onBlur={this.handleBlurItemTitle}
+                           onKeyDown={this.handleKeyDownItemTitle}
+                           value={addItem.title}
+                    />
+                  }
                 </div>
-                {
-                  editEntity && editEntity.index >= entities.length &&
-                  <input className={CLASS.TodoItemTitle}
-                         ref={thisInput => this.currentInput = thisInput}
-                         onChange={this.handleChangeItemTitle.bind(this, editEntity.index)}
-                         onBlur={this.handleBlurItemTitle.bind(this, editEntity.index)}
-                         onKeyDown={this.handleKeyDownItemTitle.bind(this, editEntity.index)}
-                         value={editEntity.newContent.title}
-                  />
-                }
               </ListGroupItem>
             </ListGroup>
           </Card.Body>
@@ -239,4 +228,13 @@ class App extends React.Component<Props, State> {
   }
 }
 
-export default App;
+export default connect(
+    ({items}:State) => ({
+      items
+    }), {
+      itemAdd: itemAction.add,
+      itemToggle: itemAction.toggle,
+      itemRemove: itemAction.remove,
+      itemEdit: itemAction.edit
+    }
+)(App)

@@ -7,11 +7,11 @@
   }
 }
 
-.todo-item {
+.todo-item-content {
   display: flex;
 
   &:hover {
-    .todo-item-delete {
+    .todo-item-icon-remove {
       visibility: visible;
     }
   }
@@ -21,7 +21,7 @@
   transition: all .5s;
 }
 
-.todo-item-check, .todo-item-delete, .todo-item:last-of-type {
+.todo-item-icon-toggle, .todo-item-icon-remove, .todo-item:last-of-type {
   cursor: pointer;
 
   &:hover {
@@ -40,7 +40,7 @@
   }
 }
 
-.todo-item-delete {
+.todo-item-icon-remove {
   visibility: hidden;
 }
 
@@ -56,7 +56,7 @@
 
   transition: transform 500ms, opacity 500ms ease-in;
 
-  .todo-item-delete {
+  .todo-item-icon-remove {
     display: none;
   }
 }
