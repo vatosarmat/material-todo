@@ -10,6 +10,7 @@ import {Provider} from 'react-redux'
 import './index.scss'
 import {reducer, State} from './stateStorage'
 import App from './components/App';
+// import Dummy from './components/Dummy'
 
 const initialState:State = {
   items: []
@@ -22,3 +23,11 @@ ReactDOM.render(
     </Provider>,
     document.getElementById('root'));
 
+/*
+ReactDOM.render(
+    <Provider store={createStore(reducer, initialState)}>
+      <Dummy/>
+    </Provider>,
+    document.getElementById('root'));
+
+*/
