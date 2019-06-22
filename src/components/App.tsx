@@ -124,7 +124,7 @@ class App extends Component<ComponentProps, ComponentState> {
       const {itemAdd, itemEdit} = this.props;
       const {addItem, editItem} = this.state;
 
-      if(addItem) {
+      if(addItem && addItem.title) {
         itemAdd(addItem)
       } else if(editItem) {
         itemEdit(editItem)
