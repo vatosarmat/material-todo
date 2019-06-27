@@ -1,240 +1,210 @@
-import React, {
-  Component, ReactEventHandler, KeyboardEventHandler
-} from 'react';
-import {Card, ListGroup, ListGroupItem} from "react-bootstrap"
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome"
-import { TransitionGroup, CSSTransition } from 'react-transition-group';
-import {connect} from 'react-redux'
+import React, {Component, ChangeEvent, MouseEvent} from 'react';
+import {
+  Typography, Container, Box, Link,
+  List, ListItem, ListItemText, ListItemIcon, ListItemSecondaryAction,
+  Checkbox, InputBase, IconButton, Menu, MenuItem,
+  Slide, Fade, Collapse
+} from '@material-ui/core';
+import {
+  MoreVert
+} from '@material-ui/icons';
+import {
+  CheckCircleOutline, CheckboxBlankCircleOutline
+} from 'mdi-material-ui'
+import cuid, {slug} from 'cuid'
 
-import {itemAction, State, ItemUpdate, ItemData} from "../stateStorage"
-import './App.scss'
 
-const CLASS = {
-  TodoItem: 'todo-item',
-  TodoItemContent: 'todo-item-content',
-  TodoItemTransition: 'todo-item-transition',
-  TodoItemIconToggle: 'todo-item-icon-toggle',
-  TodoItemIconAdd: 'todo-item-icon-add',
-  TodoItemIconRemove: 'todo-item-icon-remove',
-  TodoItemTitle: 'todo-item-title',
+interface State {
+  readonly activeItemInfo: ActiveItemInfo | null
+  readonly items: {
+    readonly id:string
+    readonly title:string
+    readonly done:boolean
+    readonly description:string
+  }[]
 }
 
-const ID = {
-  TodoItemAdd: 'todo-item-add'
+interface ActiveItemInfo {
+  id: string
+  element: HTMLElement
+  status: 'menu' | 'edit' | 'exiting'
 }
 
+export default class App extends Component<{}, State> {
 
-interface ComponentProps {
-  items: State['items']
+  state:State = {
+    activeItemInfo: null,
 
-  itemAdd: typeof itemAction.add,
-  itemToggle: typeof itemAction.toggle,
-  itemRemove: typeof itemAction.remove,
-  itemEdit: typeof itemAction.edit
-}
-
-interface ComponentState {
-  addItem: ItemData | null,
-  editItem: ItemUpdate | null
-}
-
-
-class App extends Component<ComponentProps, ComponentState> {
-
-  state:ComponentState = {
-    addItem: null,
-    editItem: null
-  }
-
-  currentInput:HTMLInputElement|null = null
-
-  handleClickItemTitle:ReactEventHandler<HTMLElement> = evt => {
-    const {items} = this.props
-    const itemElement = evt.currentTarget.closest('.'+CLASS.TodoItemContent)
-
-    if(itemElement) {
-      const item = items.find(it => it.id === itemElement.id);
-      if(item) {
-        this.setState({
-          editItem: item,
-          addItem: null
-        })
+    items: [
+      {
+        id: slug(),
+        title: 'Vasya',
+        done: false,
+        description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dicta hic iure nemo nobis non reprehenderit?'
+      },
+      {
+        id: slug(),
+        title: 'Peter',
+        done: false,
+        description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Est, saepe?'
+      },
+      {
+        id: slug(),
+        title: 'John',
+        done: false,
+        description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Debitis dolores quisquam sed!'
+      },
+      {
+        id: slug(),
+        title: 'Nicolas',
+        done: false,
+        description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Deserunt expedita nemo neque quo.'
       }
-    }
+    ]
   }
 
-  handleClickItemToggle:ReactEventHandler<HTMLElement> = evt => {
-    const {itemToggle} = this.props;
-    const itemElement = evt.currentTarget.closest('.'+CLASS.TodoItemContent);
-
-    if(itemElement) {
-      itemToggle(itemElement);
-    }
-  }
-
-  handleClickItemAdd:ReactEventHandler<HTMLElement> = evt => {
-    this.setState({
-      editItem: null,
-      addItem: {
-        title: ''
-      }
-    })
-  }
-
-  handleClickItemDelete:ReactEventHandler<HTMLElement> = evt => {
-    const {itemRemove} = this.props;
-    const itemElement = evt.currentTarget.closest('.'+CLASS.TodoItemContent);
-
-    if(itemElement) {
-      itemRemove(itemElement)
-    }
-  }
-
-  handleChangeItemTitle:ReactEventHandler<HTMLInputElement> = evt => {
-    const {currentTarget:{value}} = evt;
-
+  handleCheck = (id:string, evt: ChangeEvent<HTMLInputElement>, checked: boolean )=> {
     this.setState(state => ({
-      editItem: state.editItem ? {
-        ...state.editItem,
-        title: value
-      } : null,
-
-      addItem: state.addItem ? {
-        ...state.addItem,
-        title: value
-      } : null
+      ...state,
+      items: state.items.map( item => item.id === id ? {...item, done: checked} : item)
     }))
   }
 
-  handleBlurItemTitle:ReactEventHandler<HTMLInputElement> = evt => {
-    this.setNewContent(true)
+  handleInput = (id:string, evt: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const {name, value} = evt.target
+
+    this.setState(state => ({
+      ...state,
+      items: state.items.map(item => item.id === id ? {...item, [name]: value} : item)
+    }))
   }
 
-  handleKeyDownItemTitle:KeyboardEventHandler<HTMLInputElement> = evt => {
-    if(evt.key === 'Enter') {
-      this.setNewContent(true)
-    } else if(evt.key === 'Escape') {
-      this.setNewContent(false)
-    }
-  }
+  handleMenuOpen = (id:string, evt: MouseEvent<HTMLButtonElement>) => {
+    const element = evt.currentTarget;
 
-  setNewContent(set: boolean) {
-
-    if(set) {
-      const {itemAdd, itemEdit} = this.props;
-      const {addItem, editItem} = this.state;
-
-      if(addItem && addItem.title) {
-        itemAdd(addItem)
-      } else if(editItem) {
-        itemEdit(editItem)
+    this.setState(state => ({
+      ...state,
+      activeItemInfo: {
+        id, element,
+        status: 'menu'
       }
-    }
+    }))
+  }
 
-    this.setState({
-      editItem: null,
-      addItem: null
+  handleMenuClose = (evt: MouseEvent<HTMLButtonElement>) => {
+    this.setState(state => ({
+      ...state,
+      activeItemInfo: null
+    }))
+  }
+
+  handleMenuItemEdit = (evt: MouseEvent<HTMLElement>) => {
+
+  }
+
+  handleMenuItemDeleteStart = (evt: MouseEvent<HTMLElement>) => {
+    this.setState(state => state.activeItemInfo ? {
+      ...state,
+      activeItemInfo: {
+        ...state.activeItemInfo,
+        status: 'exiting'
+      }
+    } : state)
+  }
+
+  handleMenuItemDeleteEnd = () => {
+    this.setState(state => {
+      const {items, activeItemInfo} = state;
+
+      return activeItemInfo ? {
+        ...state,
+        items: items.filter(item => item.id !== activeItemInfo.id ),
+        activeItemInfo: null
+      } : state
     })
   }
 
-  componentDidUpdate(prevProps: Readonly<ComponentProps>,
-                     prevState: Readonly<ComponentState>,
-                     snapshot?: any): void {
-    if(this.currentInput) {
-      this.currentInput.focus();
-    }
+  renderMenu(activeItemInfo: ActiveItemInfo) {
+    const {items} = this.state;
+    const activeItem = items.find(item => item.id === activeItemInfo.id);
+
+    return activeItem ? (
+        <Menu
+            id="item-menu"
+            anchorEl={activeItemInfo.status === 'menu' ? activeItemInfo.element : null}
+            keepMounted
+            MenuListProps={{
+              //dense: true
+            }}
+            open={activeItemInfo.status === 'menu'}
+            onClose={this.handleMenuClose}
+        >
+          <MenuItem
+              disabled={activeItem.done}
+              style={{
+                minHeight: '24px'
+              }}
+              onClick={this.handleMenuItemEdit}>Edit</MenuItem>
+          <MenuItem
+              style={{
+                minHeight: '24px'
+              }}
+              onClick={this.handleMenuItemDeleteStart}>Delete</MenuItem>
+        </Menu>
+    ) : null
   }
 
-  renderList() {
-
-    const {items} = this.props
-    const {editItem} = this.state
-
-    return (
-        <TransitionGroup component={null} appear={false} enter={false}>
-          {items.map(ent  =>
-              <CSSTransition
-                  timeout={500}
-                  classNames={CLASS.TodoItemTransition}
-                  key={ent.id}
-              >
-                <ListGroupItem as="li" action
-                               className={CLASS.TodoItem}
-                >
-                  <div className={CLASS.TodoItemContent} id={ent.id}>
-                    <div className={`${CLASS.TodoItemIconToggle} text-primary mr-2`}
-                         onClick={this.handleClickItemToggle}>
-                      <FontAwesomeIcon icon={ent.done ? ['fas', 'check-circle'] : ['far', 'circle']} size="lg"/>
-                    </div>
-                    {editItem && editItem.id === ent.id ?
-                        <input className={CLASS.TodoItemTitle}
-                               ref={thisInput => this.currentInput = thisInput}
-                               onChange={this.handleChangeItemTitle}
-                               onBlur={this.handleBlurItemTitle}
-                               onKeyDown={this.handleKeyDownItemTitle}
-                               value={editItem.title}
-                        /> :
-                        <div className={CLASS.TodoItemTitle + (ent.done ? ' text-black-50' : ' text-body')}
-                             onClick={this.handleClickItemTitle}>
-                          {ent.title}
-                        </div>
-                    }
-                    <div className={`${CLASS.TodoItemIconRemove} text-danger ml-2`}
-                         onClick={this.handleClickItemDelete}>
-                      <FontAwesomeIcon icon={['fas', 'minus-circle']} size="lg"/>
-                    </div>
-                  </div>
-                </ListGroupItem></CSSTransition>
-          )}
-        </TransitionGroup>
-    )
-  }
 
   render() {
+    const {items, activeItemInfo} = this.state;
 
-    const {addItem} = this.state
+    console.log('render start')
+    for(const item of items) {
+      console.log(!(activeItemInfo && activeItemInfo.id === item.id && activeItemInfo.status === 'exiting'));
+    }
+    console.log('render end')
 
     return (
-        <Card className="App">
-          <Card.Header as="h3">
-            TODO app
-          </Card.Header>
-          <Card.Body className='px-0'>
-            <ListGroup as="ul" variant="flush">
-              {this.renderList()}
-              <ListGroupItem as="li" action className={CLASS.TodoItem}
-                             onClick={this.handleClickItemAdd}
-              >
-                <div className={CLASS.TodoItemContent} id={ID.TodoItemAdd}>
-                  <div className={`${CLASS.TodoItemIconAdd} text-success mr-2`}>
-                    <FontAwesomeIcon icon={['fas', 'plus-circle']} size="lg"/>
-                  </div>
-                  {
-                    addItem &&
-                    <input className={CLASS.TodoItemTitle}
-                           ref={thisInput => this.currentInput = thisInput}
-                           onChange={this.handleChangeItemTitle}
-                           onBlur={this.handleBlurItemTitle}
-                           onKeyDown={this.handleKeyDownItemTitle}
-                           value={addItem.title}
-                    />
-                  }
-                </div>
-              </ListGroupItem>
-            </ListGroup>
-          </Card.Body>
-        </Card>
+        <Container maxWidth="sm">
+          <Box>
+            <List>
+              {
+                items.map( (item, idx)  => {
+                  return (
+                  <Collapse enter={false} appear={false} key={idx}
+                      in={!(activeItemInfo && activeItemInfo.id === item.id && activeItemInfo.status === 'exiting')}
+                      onExited={this.handleMenuItemDeleteEnd}
+                  >
+                    <ListItem divider selected={!!activeItemInfo && item.id === activeItemInfo.id} disabled={item.done}>
+                      <ListItemIcon style={{
+                        minWidth: '48px'
+                      }}>
+                        <Checkbox
+                            color="default" disableRipple
+                            checkedIcon={<CheckCircleOutline />} icon={<CheckboxBlankCircleOutline/>}
+                            onChange={this.handleCheck.bind(this, item.id)}
+                            checked={item.done}
+                        />
+                      </ListItemIcon>
+                      <ListItemText
+                          style = { item.done ? {
+                            textDecoration: 'line-through'
+                          } : undefined}
+                          primary={item.title} secondary={item.description}/>
+                      <ListItemSecondaryAction>
+                        <IconButton onClick={this.handleMenuOpen.bind(this, item.id)}>
+                          <MoreVert color='action' fontSize='inherit'/>
+                        </IconButton>
+                      </ListItemSecondaryAction>
+                    </ListItem>
+                  </Collapse>
+                  )
+                })
+              }
+            </List>
+          </Box>
+          {activeItemInfo && this.renderMenu(activeItemInfo)}
+        </Container>
     );
   }
 }
-
-export default connect(
-    ({items}:State) => ({
-      items
-    }), {
-      itemAdd: itemAction.add,
-      itemToggle: itemAction.toggle,
-      itemRemove: itemAction.remove,
-      itemEdit: itemAction.edit
-    }
-)(App)
