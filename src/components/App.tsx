@@ -1,8 +1,8 @@
-import React, {Component, ChangeEvent, MouseEvent} from 'react';
+import React, {Component, ChangeEvent, MouseEvent, FocusEvent} from 'react';
 import {
   Typography, Container, Box, Link,
-  List, ListItem, ListItemText, ListItemIcon, ListItemSecondaryAction,
-  Checkbox, InputBase, IconButton, Menu, MenuItem,
+  List, ListItem, ListItemText, ListItemIcon, ListItemSecondaryAction, Menu, MenuItem,
+  Checkbox, InputBase, Input, IconButton, TextField, FormControl,
   Slide, Fade, Collapse
 } from '@material-ui/core';
 import {
@@ -16,18 +16,20 @@ import cuid, {slug} from 'cuid'
 
 interface State {
   readonly activeItemInfo: ActiveItemInfo | null
-  readonly items: {
-    readonly id:string
-    readonly title:string
-    readonly done:boolean
-    readonly description:string
-  }[]
+  readonly items: Item[]
+}
+
+interface Item {
+  readonly id:string
+  readonly title:string
+  readonly done:boolean
+  readonly description:string
 }
 
 interface ActiveItemInfo {
   id: string
   element: HTMLElement
-  status: 'menu' | 'edit' | 'exiting'
+  status: 'menu' |'edit' | 'exiting'
 }
 
 export default class App extends Component<{}, State> {
@@ -80,6 +82,7 @@ export default class App extends Component<{}, State> {
   }
 
   handleMenuOpen = (id:string, evt: MouseEvent<HTMLButtonElement>) => {
+
     const element = evt.currentTarget;
 
     this.setState(state => ({
@@ -99,10 +102,26 @@ export default class App extends Component<{}, State> {
   }
 
   handleMenuItemEdit = (evt: MouseEvent<HTMLElement>) => {
-
+    this.setState(state => state.activeItemInfo ? {
+      ...state,
+      activeItemInfo: {
+        ...state.activeItemInfo,
+        status: 'edit'
+      }
+    } : state)
   }
 
-  handleMenuItemDeleteStart = (evt: MouseEvent<HTMLElement>) => {
+  handleMenuItemEditBlur = (evt: FocusEvent<HTMLElement>) => {
+
+    if(!evt.relatedTarget) {
+      this.setState(state => ({
+        ...state,
+        activeItemInfo: null
+      }))
+    }
+  }
+
+  handleMenuItemDelete = (evt: MouseEvent<HTMLElement>) => {
     this.setState(state => state.activeItemInfo ? {
       ...state,
       activeItemInfo: {
@@ -112,7 +131,7 @@ export default class App extends Component<{}, State> {
     } : state)
   }
 
-  handleMenuItemDeleteEnd = () => {
+  handleMenuItemDeleteExited = () => {
     this.setState(state => {
       const {items, activeItemInfo} = state;
 
@@ -128,15 +147,14 @@ export default class App extends Component<{}, State> {
     const {items} = this.state;
     const activeItem = items.find(item => item.id === activeItemInfo.id);
 
-    return activeItem ? (
+    return activeItem && activeItemInfo.status === 'menu' ? (
         <Menu
             id="item-menu"
-            anchorEl={activeItemInfo.status === 'menu' ? activeItemInfo.element : null}
-            keepMounted
+            anchorEl={activeItemInfo.element}
             MenuListProps={{
               //dense: true
             }}
-            open={activeItemInfo.status === 'menu'}
+            open
             onClose={this.handleMenuClose}
         >
           <MenuItem
@@ -149,23 +167,63 @@ export default class App extends Component<{}, State> {
               style={{
                 minHeight: '24px'
               }}
-              onClick={this.handleMenuItemDeleteStart}>Delete</MenuItem>
+              onClick={this.handleMenuItemDelete}>Delete</MenuItem>
         </Menu>
     ) : null
+  }
+
+
+  renderListItem(item: Item) {
+    const {activeItemInfo} = this.state;
+    const isItemActive = !!activeItemInfo && item.id === activeItemInfo.id
+
+    return (
+        <ListItem divider selected={isItemActive} disabled={item.done}>
+          <ListItemIcon style={{
+            minWidth: '48px'
+          }}>
+            <Checkbox
+                disabled={isItemActive}
+                color="default" disableRipple
+                checkedIcon={<CheckCircleOutline />} icon={<CheckboxBlankCircleOutline/>}
+                onChange={this.handleCheck.bind(this, item.id)}
+                checked={item.done}
+            />
+          </ListItemIcon>
+          {(isItemActive && activeItemInfo && activeItemInfo.status === 'edit') ?
+              <FormControl fullWidth
+                           onBlur={this.handleMenuItemEditBlur}
+              >
+
+                <TextField name='title' autoFocus
+                           value={item.title}
+                           onChange={this.handleInput.bind(this, item.id)}/>
+                <TextField name='description' multiline
+                           value={item.description}
+                           onChange={this.handleInput.bind(this, item.id)}/>
+              </FormControl> :
+              <ListItemText style = { item.done ? {
+                textDecoration: 'line-through'
+              } : undefined}
+                            primary={item.title}
+                            secondary={item.description}/>
+          }
+          <ListItemSecondaryAction>
+            <IconButton onClick={this.handleMenuOpen.bind(this, item.id)}>
+              <MoreVert color='action' fontSize='inherit'/>
+            </IconButton>
+          </ListItemSecondaryAction>
+        </ListItem>
+    )
   }
 
 
   render() {
     const {items, activeItemInfo} = this.state;
 
-    console.log('render start')
-    for(const item of items) {
-      console.log(!(activeItemInfo && activeItemInfo.id === item.id && activeItemInfo.status === 'exiting'));
-    }
-    console.log('render end')
-
     return (
         <Container maxWidth="sm">
+          {activeItemInfo && this.renderMenu(activeItemInfo)}
           <Box>
             <List>
               {
@@ -173,37 +231,15 @@ export default class App extends Component<{}, State> {
                   return (
                   <Collapse enter={false} appear={false} key={idx}
                       in={!(activeItemInfo && activeItemInfo.id === item.id && activeItemInfo.status === 'exiting')}
-                      onExited={this.handleMenuItemDeleteEnd}
+                      onExited={this.handleMenuItemDeleteExited}
                   >
-                    <ListItem divider selected={!!activeItemInfo && item.id === activeItemInfo.id} disabled={item.done}>
-                      <ListItemIcon style={{
-                        minWidth: '48px'
-                      }}>
-                        <Checkbox
-                            color="default" disableRipple
-                            checkedIcon={<CheckCircleOutline />} icon={<CheckboxBlankCircleOutline/>}
-                            onChange={this.handleCheck.bind(this, item.id)}
-                            checked={item.done}
-                        />
-                      </ListItemIcon>
-                      <ListItemText
-                          style = { item.done ? {
-                            textDecoration: 'line-through'
-                          } : undefined}
-                          primary={item.title} secondary={item.description}/>
-                      <ListItemSecondaryAction>
-                        <IconButton onClick={this.handleMenuOpen.bind(this, item.id)}>
-                          <MoreVert color='action' fontSize='inherit'/>
-                        </IconButton>
-                      </ListItemSecondaryAction>
-                    </ListItem>
+                    {this.renderListItem(item, )}
                   </Collapse>
                   )
                 })
               }
             </List>
           </Box>
-          {activeItemInfo && this.renderMenu(activeItemInfo)}
         </Container>
     );
   }

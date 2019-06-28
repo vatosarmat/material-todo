@@ -9,7 +9,7 @@ import './index.scss'
 import theme from './theme'
 import {reducer, State} from './stateStorage'
 import App from './components/App';
-// import Dummy from './components/Dummy'
+//import Dummy from './components/Dummy'
 
 
 const initialState:State = {
