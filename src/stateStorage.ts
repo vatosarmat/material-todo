@@ -10,6 +10,7 @@ export interface ItemId {
 //add
 export interface ItemData {
   readonly title: string
+  readonly description?: string
 }
 
 //edit
@@ -40,7 +41,7 @@ type RootAction = ActionType<typeof itemAction>
 const reducer = createReducer<State, RootAction>(defaultState, {
   'ITEM/ADD': (state, {payload}) => ({
     ...state,
-    items: [...state.items, {id: 'item'+cuid.slug(), done: false, ...payload}]
+    items: [...state.items, {id: 'item_'+cuid.slug(), done: false, ...payload}]
   }),
 
   'ITEM/TOGGLE': (state, {payload}) => ({

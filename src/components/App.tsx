@@ -2,155 +2,130 @@ import React, {Component, ChangeEvent, MouseEvent, FocusEvent} from 'react';
 import {
   Typography, Container, Box, Link,
   List, ListItem, ListItemText, ListItemIcon, ListItemSecondaryAction, Menu, MenuItem,
-  Checkbox, InputBase, Input, IconButton, TextField, FormControl,
+  Checkbox, InputBase, Input, IconButton, TextField, FormControl, FormGroup,
   Slide, Fade, Collapse
 } from '@material-ui/core';
 import {
-  MoreVert
+  MoreVert, Cancel
 } from '@material-ui/icons';
 import {
   CheckCircleOutline, CheckboxBlankCircleOutline
 } from 'mdi-material-ui'
 import cuid, {slug} from 'cuid'
+import {connect} from 'react-redux'
+
+import {itemAction, State, Item, ItemUpdate, ItemData} from "../stateStorage"
 
 
-interface State {
-  readonly activeItemInfo: ActiveItemInfo | null
-  readonly items: Item[]
+interface ComponentState {
+  readonly activeItem: ActiveItem | null
 }
 
-interface Item {
-  readonly id:string
-  readonly title:string
-  readonly done:boolean
-  readonly description:string
+interface ComponentProps {
+  items: State['items']
+
+  itemAdd: typeof itemAction.add,
+  itemToggle: typeof itemAction.toggle,
+  itemRemove: typeof itemAction.remove,
+  itemEdit: typeof itemAction.edit
 }
 
-interface ActiveItemInfo {
-  id: string
+
+interface ActiveItem extends Item {
   element: HTMLElement
   status: 'menu' |'edit' | 'exiting'
 }
 
-export default class App extends Component<{}, State> {
-
-  state:State = {
-    activeItemInfo: null,
-
-    items: [
-      {
-        id: slug(),
-        title: 'Vasya',
-        done: false,
-        description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dicta hic iure nemo nobis non reprehenderit?'
-      },
-      {
-        id: slug(),
-        title: 'Peter',
-        done: false,
-        description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Est, saepe?'
-      },
-      {
-        id: slug(),
-        title: 'John',
-        done: false,
-        description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Debitis dolores quisquam sed!'
-      },
-      {
-        id: slug(),
-        title: 'Nicolas',
-        done: false,
-        description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Deserunt expedita nemo neque quo.'
-      }
-    ]
+class App extends Component<ComponentProps, ComponentState> {
+  state:ComponentState = {
+    activeItem: null
   }
 
-  handleCheck = (id:string, evt: ChangeEvent<HTMLInputElement>, checked: boolean )=> {
+  resetActiveItem() {
     this.setState(state => ({
       ...state,
-      items: state.items.map( item => item.id === id ? {...item, done: checked} : item)
+      activeItem: null
     }))
   }
 
-  handleInput = (id:string, evt: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  handleItemToggle = (id:string)=> {
+    this.props.itemToggle({id})
+  }
+
+  handleActiveItemInputChange = (id:string, evt: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const {name, value} = evt.target
 
-    this.setState(state => ({
-      ...state,
-      items: state.items.map(item => item.id === id ? {...item, [name]: value} : item)
-    }))
+    this.setState(state => state.activeItem ? {
+      activeItem: {
+        ...state.activeItem,
+        [name]: value
+      }
+    } : state)
   }
 
   handleMenuOpen = (id:string, evt: MouseEvent<HTMLButtonElement>) => {
-
     const element = evt.currentTarget;
+    const newActive = this.props.items.find(item => item.id === id)
 
-    this.setState(state => ({
-      ...state,
-      activeItemInfo: {
-        id, element,
-        status: 'menu'
-      }
-    }))
+    if(newActive) {
+      this.setState(state => ({
+        ...state,
+        activeItem: {
+          ...newActive, element, status: 'menu'
+        }
+      }))
+    }
   }
 
-  handleMenuClose = (evt: MouseEvent<HTMLButtonElement>) => {
-    this.setState(state => ({
-      ...state,
-      activeItemInfo: null
-    }))
+  handleMenuClose = () => {
+    this.resetActiveItem()
   }
 
-  handleMenuItemEdit = (evt: MouseEvent<HTMLElement>) => {
-    this.setState(state => state.activeItemInfo ? {
+  handleMenuItemEdit = () => {
+    this.setState(state => state.activeItem ? {
       ...state,
-      activeItemInfo: {
-        ...state.activeItemInfo,
+      activeItem: {
+        ...state.activeItem,
         status: 'edit'
       }
     } : state)
   }
 
-  handleMenuItemEditBlur = (evt: FocusEvent<HTMLElement>) => {
+  handleMenuItemEditApply = () => {
+    if(this.state.activeItem) {
+      this.props.itemEdit({...this.state.activeItem})
 
-    if(!evt.relatedTarget) {
-      this.setState(state => ({
-        ...state,
-        activeItemInfo: null
-      }))
+      this.resetActiveItem()
     }
   }
 
-  handleMenuItemDelete = (evt: MouseEvent<HTMLElement>) => {
-    this.setState(state => state.activeItemInfo ? {
+  handleMenuItemEditCancel = () => {
+    this.resetActiveItem()
+  }
+
+  handleMenuItemRemove = () => {
+    this.setState(state => state.activeItem ? {
       ...state,
-      activeItemInfo: {
-        ...state.activeItemInfo,
+      activeItem: {
+        ...state.activeItem,
         status: 'exiting'
       }
     } : state)
   }
 
-  handleMenuItemDeleteExited = () => {
-    this.setState(state => {
-      const {items, activeItemInfo} = state;
+  handleMenuItemRemoveExited = () => {
+    if(this.state.activeItem) {
+      this.props.itemRemove({...this.state.activeItem})
 
-      return activeItemInfo ? {
-        ...state,
-        items: items.filter(item => item.id !== activeItemInfo.id ),
-        activeItemInfo: null
-      } : state
-    })
+      this.resetActiveItem()
+    }
   }
 
-  renderMenu(activeItemInfo: ActiveItemInfo) {
-    const {items} = this.state;
-    const activeItem = items.find(item => item.id === activeItemInfo.id);
-
-    return activeItem && activeItemInfo.status === 'menu' ? (
+  renderMenu(activeItem: ActiveItem) {
+    return  (
         <Menu
             id="item-menu"
-            anchorEl={activeItemInfo.element}
+            anchorEl={activeItem.element}
             MenuListProps={{
               //dense: true
             }}
@@ -167,15 +142,16 @@ export default class App extends Component<{}, State> {
               style={{
                 minHeight: '24px'
               }}
-              onClick={this.handleMenuItemDelete}>Delete</MenuItem>
+              onClick={this.handleMenuItemRemove}>Remove</MenuItem>
         </Menu>
-    ) : null
+    )
   }
 
 
   renderListItem(item: Item) {
-    const {activeItemInfo} = this.state;
-    const isItemActive = !!activeItemInfo && item.id === activeItemInfo.id
+    const {activeItem} = this.state;
+    const isItemActive = !!activeItem && item.id === activeItem.id
+    const isEdit = isItemActive && !!activeItem && activeItem.status === 'edit'
 
     return (
         <ListItem divider selected={isItemActive} disabled={item.done}>
@@ -186,30 +162,35 @@ export default class App extends Component<{}, State> {
                 disabled={isItemActive}
                 color="default" disableRipple
                 checkedIcon={<CheckCircleOutline />} icon={<CheckboxBlankCircleOutline/>}
-                onChange={this.handleCheck.bind(this, item.id)}
+                onChange={this.handleItemToggle.bind(this, item.id)}
                 checked={item.done}
             />
           </ListItemIcon>
-          {(isItemActive && activeItemInfo && activeItemInfo.status === 'edit') ?
-              <FormControl fullWidth
-                           onBlur={this.handleMenuItemEditBlur}
-              >
-
-                <TextField name='title' autoFocus
-                           value={item.title}
-                           onChange={this.handleInput.bind(this, item.id)}/>
+          {isEdit && activeItem ?
+              <FormControl fullWidth>
+                <TextField name='title' autoFocus error={!activeItem.title}
+                           value={activeItem.title}
+                           onChange={this.handleActiveItemInputChange.bind(this, item.id)}/>
                 <TextField name='description' multiline
-                           value={item.description}
-                           onChange={this.handleInput.bind(this, item.id)}/>
+                           value={activeItem.description}
+                           onChange={this.handleActiveItemInputChange.bind(this, item.id)}/>
+                <FormGroup row style={{justifyContent: 'end'}}>
+                  <IconButton color='primary' onClick={this.handleMenuItemEditApply} disabled={!activeItem.title}>
+                    <CheckCircleOutline/>
+                  </IconButton>
+                  <IconButton color='secondary' onClick={this.handleMenuItemEditCancel}>
+                    <Cancel/>
+                  </IconButton>
+                </FormGroup>
               </FormControl> :
               <ListItemText style = { item.done ? {
-                textDecoration: 'line-through'
-              } : undefined}
+                              textDecoration: 'line-through'
+                            } : undefined}
                             primary={item.title}
                             secondary={item.description}/>
           }
           <ListItemSecondaryAction>
-            <IconButton onClick={this.handleMenuOpen.bind(this, item.id)}>
+            <IconButton onClick={this.handleMenuOpen.bind(this, item.id)} disabled={isEdit}>
               <MoreVert color='action' fontSize='inherit'/>
             </IconButton>
           </ListItemSecondaryAction>
@@ -219,19 +200,20 @@ export default class App extends Component<{}, State> {
 
 
   render() {
-    const {items, activeItemInfo} = this.state;
+    const {items} = this.props
+    const {activeItem} = this.state
 
     return (
         <Container maxWidth="sm">
-          {activeItemInfo && this.renderMenu(activeItemInfo)}
+          {activeItem && activeItem.status === 'menu' && this.renderMenu(activeItem)}
           <Box>
             <List>
               {
                 items.map( (item, idx)  => {
                   return (
                   <Collapse enter={false} appear={false} key={idx}
-                      in={!(activeItemInfo && activeItemInfo.id === item.id && activeItemInfo.status === 'exiting')}
-                      onExited={this.handleMenuItemDeleteExited}
+                      in={!(activeItem && activeItem.id === item.id && activeItem.status === 'exiting')}
+                      onExited={this.handleMenuItemRemoveExited}
                   >
                     {this.renderListItem(item, )}
                   </Collapse>
@@ -244,3 +226,14 @@ export default class App extends Component<{}, State> {
     );
   }
 }
+
+export default connect(
+    ({items}:State) => ({
+      items
+    }), {
+      itemAdd: itemAction.add,
+      itemToggle: itemAction.toggle,
+      itemRemove: itemAction.remove,
+      itemEdit: itemAction.edit
+    }
+)(App)
