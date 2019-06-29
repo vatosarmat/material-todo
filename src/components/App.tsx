@@ -11,17 +11,17 @@ import {
 import {
   CheckCircleOutline, CheckboxBlankCircleOutline
 } from 'mdi-material-ui'
-import cuid, {slug} from 'cuid'
 import {connect} from 'react-redux'
 
-import {itemAction, State, Item, ItemUpdate, ItemData} from "../stateStorage"
+import {itemAction, State, Item, ItemId, ItemData} from "../stateStorage"
+import ItemEditForm, {ItemEditFormProps} from "./ItemEditForm"
 
 
-interface ComponentState {
+interface AppState {
   readonly activeItem: ActiveItem | null
 }
 
-interface ComponentProps {
+interface AppProps {
   items: State['items']
 
   itemAdd: typeof itemAction.add,
@@ -31,13 +31,14 @@ interface ComponentProps {
 }
 
 
-interface ActiveItem extends Item {
+interface ActiveItem extends ItemId{
   element: HTMLElement
   status: 'menu' |'edit' | 'exiting'
 }
 
-class App extends Component<ComponentProps, ComponentState> {
-  state:ComponentState = {
+
+class App extends Component<AppProps, AppState> {
+  state:AppState = {
     activeItem: null
   }
 
@@ -50,17 +51,6 @@ class App extends Component<ComponentProps, ComponentState> {
 
   handleItemToggle = (id:string)=> {
     this.props.itemToggle({id})
-  }
-
-  handleActiveItemInputChange = (id:string, evt: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const {name, value} = evt.target
-
-    this.setState(state => state.activeItem ? {
-      activeItem: {
-        ...state.activeItem,
-        [name]: value
-      }
-    } : state)
   }
 
   handleMenuOpen = (id:string, evt: MouseEvent<HTMLButtonElement>) => {
@@ -91,9 +81,9 @@ class App extends Component<ComponentProps, ComponentState> {
     } : state)
   }
 
-  handleMenuItemEditApply = () => {
+  handleMenuItemEditApply = (data: ItemData) => {
     if(this.state.activeItem) {
-      this.props.itemEdit({...this.state.activeItem})
+      this.props.itemEdit({...this.state.activeItem, ...data})
 
       this.resetActiveItem()
     }
@@ -122,6 +112,8 @@ class App extends Component<ComponentProps, ComponentState> {
   }
 
   renderMenu(activeItem: ActiveItem) {
+    const {items} = this.props;
+
     return  (
         <Menu
             id="item-menu"
@@ -133,7 +125,7 @@ class App extends Component<ComponentProps, ComponentState> {
             onClose={this.handleMenuClose}
         >
           <MenuItem
-              disabled={activeItem.done}
+              disabled={items.find(item => item.id === activeItem.id)!.done}
               style={{
                 minHeight: '24px'
               }}
@@ -151,7 +143,7 @@ class App extends Component<ComponentProps, ComponentState> {
   renderListItem(item: Item) {
     const {activeItem} = this.state;
     const isItemActive = !!activeItem && item.id === activeItem.id
-    const isEdit = isItemActive && !!activeItem && activeItem.status === 'edit'
+    const isEdit = isItemActive && activeItem!.status === 'edit'
 
     return (
         <ListItem divider selected={isItemActive} disabled={item.done}>
@@ -166,23 +158,11 @@ class App extends Component<ComponentProps, ComponentState> {
                 checked={item.done}
             />
           </ListItemIcon>
-          {isEdit && activeItem ?
-              <FormControl fullWidth>
-                <TextField name='title' autoFocus error={!activeItem.title}
-                           value={activeItem.title}
-                           onChange={this.handleActiveItemInputChange.bind(this, item.id)}/>
-                <TextField name='description' multiline
-                           value={activeItem.description}
-                           onChange={this.handleActiveItemInputChange.bind(this, item.id)}/>
-                <FormGroup row style={{justifyContent: 'end'}}>
-                  <IconButton color='primary' onClick={this.handleMenuItemEditApply} disabled={!activeItem.title}>
-                    <CheckCircleOutline/>
-                  </IconButton>
-                  <IconButton color='secondary' onClick={this.handleMenuItemEditCancel}>
-                    <Cancel/>
-                  </IconButton>
-                </FormGroup>
-              </FormControl> :
+          {isEdit ?
+              <ItemEditForm
+                  title={item.title} description={item.description}
+                  onApply={this.handleMenuItemEditApply}
+                  onCancel={this.handleMenuItemEditCancel}/>:
               <ListItemText style = { item.done ? {
                               textDecoration: 'line-through'
                             } : undefined}
@@ -215,7 +195,7 @@ class App extends Component<ComponentProps, ComponentState> {
                       in={!(activeItem && activeItem.id === item.id && activeItem.status === 'exiting')}
                       onExited={this.handleMenuItemRemoveExited}
                   >
-                    {this.renderListItem(item, )}
+                    {this.renderListItem(item)}
                   </Collapse>
                   )
                 })

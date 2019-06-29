@@ -13,9 +13,6 @@ export interface ItemData {
   readonly description?: string
 }
 
-//edit
-export type ItemUpdate = ItemId & Partial<ItemData>
-
 //state
 export interface Item extends ItemId, ItemData {
   readonly done: boolean
@@ -33,7 +30,7 @@ const itemAction = {
   add: createStandardAction('ITEM/ADD')<ItemData>(),
   toggle: createStandardAction('ITEM/TOGGLE')<ItemId>(),
   remove: createStandardAction('ITEM/REMOVE')<ItemId>(),
-  edit: createStandardAction('ITEM/EDIT')<ItemUpdate>()
+  edit: createStandardAction('ITEM/EDIT')<ItemId & ItemData>()
 }
 
 type RootAction = ActionType<typeof itemAction>

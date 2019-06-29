@@ -6,7 +6,6 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import { ThemeProvider } from '@material-ui/styles';
 import {slug} from 'cuid'
 
-import './index.scss'
 import theme from './theme'
 import {reducer, State} from './stateStorage'
 import App from './components/App';
@@ -17,7 +16,7 @@ const initialState:State = {
   items: [
     {
       id: 'item_'+slug(),
-      title: 'Fix the car',
+      title: 'Go to doctor',
       description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Et, pariatur, ullam.',
       done: false
     },
