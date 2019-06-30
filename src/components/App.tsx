@@ -3,7 +3,7 @@ import {
   Typography, Container, Box, Link,
   List, ListItem, ListItemText, ListItemIcon, ListItemSecondaryAction, Menu, MenuItem,
   Checkbox, InputBase, Input, IconButton, TextField, FormControl, FormGroup,
-  Slide, Fade, Collapse
+  Slide, Fade, Collapse, Tooltip
 } from '@material-ui/core';
 import {
   MoreVert, AddCircleOutline, Cancel, Add
@@ -111,8 +111,8 @@ class App extends Component<AppProps, AppState> {
 
   handleItemAddApply = (data: ItemData) => {
     if(this.state.addForm) {
-      this.hideAddForm()
       this.props.itemAdd(data)
+      this.hideAddForm()
     }
   }
 
@@ -234,9 +234,11 @@ class App extends Component<AppProps, AppState> {
     }
 
     return (
-        <ListItem button divider onClick={this.handleItemAddFormOpen}>
-          {icon}
-        </ListItem>
+        <Tooltip title='Click to add new TODO item' enterDelay={850} leaveDelay={250}>
+          <ListItem button divider onClick={this.handleItemAddFormOpen}>
+            {icon}
+          </ListItem>
+        </Tooltip>
     )
   }
 

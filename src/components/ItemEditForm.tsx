@@ -1,6 +1,6 @@
 import React, {Component, ChangeEvent, KeyboardEvent } from 'react';
 import {
-  IconButton, TextField, FormControl, FormGroup
+  IconButton, TextField, FormControl, FormGroup, Tooltip
 } from '@material-ui/core';
 import {
   Cancel
@@ -55,21 +55,31 @@ export default class ItemEditForm extends Component<ItemEditFormProps, ItemData>
 
     return (
         <FormControl fullWidth>
-          <TextField name='title' autoFocus error={!title}
+          <TextField name='title' label='Title'
+                     autoFocus error={!title}
                      value={title}
                      onKeyDown={this.handleKeyDown}
                      onChange={this.handleInputChange}/>
-          <TextField name='description' multiline
+          <TextField name='description' label='Description'
+                     multiline
                      value={description}
                      onKeyDown={this.handleKeyDown}
                      onChange={this.handleInputChange}/>
           <FormGroup row style={{justifyContent: 'end'}}>
-            <IconButton color='primary' onClick={this.handleApplyClick} disabled={!title}>
-              <CheckCircleOutline/>
-            </IconButton>
-            <IconButton color='secondary' onClick={onCancel}>
-              <Cancel/>
-            </IconButton>
+            <Tooltip title="Item title cannot be empty" open={!title}>
+              <span>
+                <Tooltip title="Enter">
+                  <IconButton color='primary' onClick={this.handleApplyClick} disabled={!title}>
+                    <CheckCircleOutline/>
+                  </IconButton>
+                </Tooltip>
+              </span>
+            </Tooltip>
+            <Tooltip title="Escape" placement='right'>
+              <IconButton color='secondary' onClick={onCancel}>
+                <Cancel/>
+              </IconButton>
+            </Tooltip>
           </FormGroup>
         </FormControl>
     )
