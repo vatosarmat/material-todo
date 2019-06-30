@@ -1,4 +1,4 @@
-import React, {Component, ChangeEvent } from 'react';
+import React, {Component, ChangeEvent, KeyboardEvent } from 'react';
 import {
   IconButton, TextField, FormControl, FormGroup
 } from '@material-ui/core';
@@ -41,6 +41,14 @@ export default class ItemEditForm extends Component<ItemEditFormProps, ItemData>
     this.props.onApply({...this.state})
   }
 
+  handleKeyDown = (evt: KeyboardEvent) => {
+    if(evt.key === 'Enter') {
+      this.props.onApply({...this.state})
+    } else if(evt.key === 'Escape') {
+      this.props.onCancel()
+    }
+  }
+
   render() {
     const {title, description} = this.state
     const { onCancel} = this.props;
@@ -49,9 +57,11 @@ export default class ItemEditForm extends Component<ItemEditFormProps, ItemData>
         <FormControl fullWidth>
           <TextField name='title' autoFocus error={!title}
                      value={title}
+                     onKeyDown={this.handleKeyDown}
                      onChange={this.handleInputChange}/>
           <TextField name='description' multiline
                      value={description}
+                     onKeyDown={this.handleKeyDown}
                      onChange={this.handleInputChange}/>
           <FormGroup row style={{justifyContent: 'end'}}>
             <IconButton color='primary' onClick={this.handleApplyClick} disabled={!title}>
