@@ -6,7 +6,7 @@ import {
   Slide, Fade, Collapse
 } from '@material-ui/core';
 import {
-  MoreVert, Cancel
+  MoreVert, AddCircleOutline, Cancel, Add
 } from '@material-ui/icons';
 import {
   CheckCircleOutline, CheckboxBlankCircleOutline
@@ -18,7 +18,8 @@ import ItemEditForm, {ItemEditFormProps} from "./ItemEditForm"
 
 
 interface AppState {
-  readonly activeItem: ActiveItem | null
+  activeItem: ActiveItem | null
+  addForm: boolean
 }
 
 interface AppProps {
@@ -32,20 +33,28 @@ interface AppProps {
 
 
 interface ActiveItem extends ItemId{
-  element: HTMLElement
+  menuAnchorElement: HTMLElement
   status: 'menu' |'edit' | 'exiting'
 }
 
 
 class App extends Component<AppProps, AppState> {
   state:AppState = {
-    activeItem: null
+    activeItem: null,
+    addForm: false
   }
 
   resetActiveItem() {
     this.setState(state => ({
       ...state,
       activeItem: null
+    }))
+  }
+
+  hideAddForm() {
+    this.setState(state => ({
+      ...state,
+      addForm: false
     }))
   }
 
@@ -61,7 +70,7 @@ class App extends Component<AppProps, AppState> {
       this.setState(state => ({
         ...state,
         activeItem: {
-          ...newActive, element, status: 'menu'
+          ...newActive, menuAnchorElement: element, status: 'menu'
         }
       }))
     }
@@ -81,7 +90,7 @@ class App extends Component<AppProps, AppState> {
     } : state)
   }
 
-  handleMenuItemEditApply = (data: ItemData) => {
+  handleItemEditApply = (data: ItemData) => {
     if(this.state.activeItem) {
       this.props.itemEdit({...this.state.activeItem, ...data})
 
@@ -89,8 +98,26 @@ class App extends Component<AppProps, AppState> {
     }
   }
 
-  handleMenuItemEditCancel = () => {
+  handleItemEditCancel = () => {
     this.resetActiveItem()
+  }
+
+  handleItemAddFormOpen = () => {
+    this.setState(state => ({
+      ...state,
+      addForm: true
+    }))
+  }
+
+  handleItemAddApply = (data: ItemData) => {
+    if(this.state.addForm) {
+      this.hideAddForm()
+      this.props.itemAdd(data)
+    }
+  }
+
+  handleItemAddCancel = () => {
+    this.hideAddForm()
   }
 
   handleMenuItemRemove = () => {
@@ -117,7 +144,7 @@ class App extends Component<AppProps, AppState> {
     return  (
         <Menu
             id="item-menu"
-            anchorEl={activeItem.element}
+            anchorEl={activeItem.menuAnchorElement}
             MenuListProps={{
               //dense: true
             }}
@@ -161,8 +188,8 @@ class App extends Component<AppProps, AppState> {
           {isEdit ?
               <ItemEditForm
                   title={item.title} description={item.description}
-                  onApply={this.handleMenuItemEditApply}
-                  onCancel={this.handleMenuItemEditCancel}/>:
+                  onApply={this.handleItemEditApply}
+                  onCancel={this.handleItemEditCancel}/>:
               <ListItemText style = { item.done ? {
                               textDecoration: 'line-through'
                             } : undefined}
@@ -174,6 +201,41 @@ class App extends Component<AppProps, AppState> {
               <MoreVert color='action' fontSize='inherit'/>
             </IconButton>
           </ListItemSecondaryAction>
+        </ListItem>
+    )
+  }
+
+
+  renderAddItem() {
+    const {addForm} = this.state
+
+    const icon = (
+        <ListItemIcon style={{
+          minWidth: '48px'
+        }}>
+          <Checkbox
+              disabled
+              color="default" disableRipple
+              icon={<Add/>}
+              checked={false}
+          />
+        </ListItemIcon>
+    )
+
+    if(this.state.addForm) {
+      return (
+          <ListItem divider>
+            {icon}
+            <ItemEditForm
+                onApply={this.handleItemAddApply}
+                onCancel={this.handleItemAddCancel}/>
+          </ListItem>
+      )
+    }
+
+    return (
+        <ListItem button divider onClick={this.handleItemAddFormOpen}>
+          {icon}
         </ListItem>
     )
   }
@@ -199,6 +261,9 @@ class App extends Component<AppProps, AppState> {
                   </Collapse>
                   )
                 })
+              }
+              {
+                this.renderAddItem()
               }
             </List>
           </Box>
