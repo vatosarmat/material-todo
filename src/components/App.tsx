@@ -246,9 +246,12 @@ class App extends Component<AppProps, AppState> {
     const {activeItem} = this.state
 
     return (
-        <Container maxWidth="sm">
-          {activeItem && activeItem.status === 'menu' && this.renderMenu(activeItem)}
+        <Container maxWidth="sm" style={{
+          marginTop: '1rem'
+        }}>
           <Box>
+            <Typography variant='h5' component='h1' align='center'>TODO</Typography>
+            {activeItem && activeItem.status === 'menu' && this.renderMenu(activeItem)}
             <List>
               {
                 items.map( (item, idx)  => {
