@@ -5,12 +5,23 @@ import {Provider} from 'react-redux'
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { ThemeProvider } from '@material-ui/styles';
 import {slug} from 'cuid'
+import { persistStore, persistReducer } from 'redux-persist'
+import storage from 'redux-persist/lib/storage'
+import { PersistGate } from 'redux-persist/integration/react'
+import { composeWithDevTools } from 'redux-devtools-extension';
 
 import theme from './theme'
 import {reducer, State} from './stateStorage'
 import App from './components/App';
 //import Dummy from './components/Dummy'
 
+
+const pConfig = {
+  key: 'root',
+  storage,
+}
+
+const pReducer = persistReducer(pConfig, reducer)
 
 const initialState:State = {
   items: [
@@ -41,11 +52,16 @@ const initialState:State = {
   ]
 }
 
+const store = createStore(pReducer, initialState, composeWithDevTools())
+const persistor = persistStore(store)
+
 ReactDOM.render(
     //<ThemeProvider theme={theme}>
-    <Provider store={createStore(reducer, initialState)}>
-      <CssBaseline />
-      <App/>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <CssBaseline />
+        <App/>
+      </PersistGate>
     </Provider>
     //</ThemeProvider>
  ,

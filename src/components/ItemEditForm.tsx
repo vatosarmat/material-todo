@@ -65,7 +65,7 @@ export default class ItemEditForm extends Component<ItemEditFormProps, ItemData>
                      value={description}
                      onKeyDown={this.handleKeyDown}
                      onChange={this.handleInputChange}/>
-          <FormGroup row style={{justifyContent: 'end'}}>
+          <FormGroup row style={{justifyContent: 'flex-end'}}>
             <Tooltip title="Item title cannot be empty" open={!title}>
               <span>
                 <Tooltip title="Enter">
