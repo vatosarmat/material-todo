@@ -3,14 +3,14 @@ language: node_js
 node_js:
   - "12"
 
-bofore_install:
+before_install:
   - uname --all
 
 install:
-  - yarn install
+  - CI=false yarn install
 
 script:
-  - yarn build
+  - CI=false yarn build
 
 deploy:
     provider: script
