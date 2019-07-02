@@ -32,9 +32,7 @@
     "build": "react-scripts build",
     "test": "true",
     "eject": "react-scripts eject",
-
-    "deploy-commit": "git checkout gh-pages && cp -r build/* . && git commit -uno --allow-empty --allow-empty-message -am \"\"",
-    "deploy": "git stash && yarn deploy-commit && git push -u github gh-pages && git checkout master && git stash pop"
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": "react-app"
