@@ -33,9 +33,8 @@
     "test": "true",
     "eject": "react-scripts eject",
 
-    "deploy-commit": "git checkout gh-pages && cp -r build/* . && git commit -uno --allow-empty --allow-empty-message",
-    "deploy-push": "git push -u github gh-pages && git checkout master",
-    "deploy": "yarn deploy-commit && yarn deploy-push"
+    "deploy-commit": "git checkout gh-pages && cp -r build/* . && git commit -uno --allow-empty --allow-empty-message -am \"\"",
+    "deploy": "yarn deploy-commit && git push -u github gh-pages && git checkout master"
   },
   "eslintConfig": {
     "extends": "react-app"
