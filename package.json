@@ -1,7 +1,7 @@
 {
-  "name": "react-material-todo",
+  "name": "material-todo",
   "version": "0.1.0",
-  "homepage": "https://vatosarmat.github.io/react-material-todo",
+  "homepage": "https://vatosarmat.github.io/material-todo",
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.1.3",
