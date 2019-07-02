@@ -7,11 +7,15 @@ before_install:
   - uname --all
 
 install:
-  - CI=false yarn install
+  - yarn install
 
 script:
   - CI=false yarn build
 
 deploy:
-    provider: script
-    script: yarn deploy
+  provider: pages
+  skip_cleanup: true
+  github_token: $GH_TOKEN
+  keep_history: true
+  on:
+    branch: master
