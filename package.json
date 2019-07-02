@@ -34,7 +34,7 @@
     "eject": "react-scripts eject",
 
     "deploy-commit": "git checkout gh-pages && cp -r build/* . && git commit -uno --allow-empty --allow-empty-message -am \"\"",
-    "deploy": "yarn deploy-commit && git push -u github gh-pages && git checkout master"
+    "deploy": "git stash && yarn deploy-commit && git push -u github gh-pages && git checkout master && git stash pop"
   },
   "eslintConfig": {
     "extends": "react-app"
