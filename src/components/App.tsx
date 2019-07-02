@@ -252,7 +252,7 @@ class App extends Component<AppProps, AppState> {
           marginTop: '1rem'
         }}>
           <Box>
-            <Typography variant='h5' component='h1' align='center'>TODO app</Typography>
+            <Typography variant='h5' component='h1' align='center'>TODO</Typography>
             {activeItem && activeItem.status === 'menu' && this.renderMenu(activeItem)}
             <List>
               {
