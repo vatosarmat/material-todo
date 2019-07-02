@@ -32,8 +32,10 @@
     "build": "react-scripts build",
     "test": "true",
     "eject": "react-scripts eject",
-    "predeply": "react-scripts build",
-    "deploy": "false"
+
+    "deploy-commit": "git checkout gh-pages && cp -r build/* . && git commit -m \"new deploy\"",
+    "deploy-push": "git push -u github gh-pages && git checkout master",
+    "deploy": "yarn deploy-commit && yarn deploy-push"
   },
   "eslintConfig": {
     "extends": "react-app"
