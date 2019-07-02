@@ -1,6 +1,7 @@
 language: node_js
 
-node_js: 12
+node_js:
+  - "12"
 
 bofore_install:
   - uname --all
@@ -12,5 +13,5 @@ script:
   - yarn build
 
 deploy:
-  keep_history: true
-  - yarn deploy
+    provider: script
+    script: yarn deploy
