@@ -1,6 +1,6 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "8f5b8c1fee14f32aa90b6128a0560231",
+    "revision": "baf321a1ab2f78bcd061d89d9c8f77a4",
     "url": "/material-todo/index.html"
   },
   {
@@ -8,8 +8,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/material-todo/static/js/2.75c3a129.chunk.js"
   },
   {
-    "revision": "7bb4f4149aa1913a3f5d",
-    "url": "/material-todo/static/js/main.92cb38f0.chunk.js"
+    "revision": "d1269d08730032fbd617",
+    "url": "/material-todo/static/js/main.eba2778c.chunk.js"
   },
   {
     "revision": "c2fd9124530668cc4cd4",
