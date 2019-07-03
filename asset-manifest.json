@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.js": "/material-todo/static/js/main.92cb38f0.chunk.js",
+    "main.js.map": "/material-todo/static/js/main.92cb38f0.chunk.js.map",
+    "runtime~main.js": "/material-todo/static/js/runtime~main.20498bfa.js",
+    "runtime~main.js.map": "/material-todo/static/js/runtime~main.20498bfa.js.map",
+    "static/js/2.75c3a129.chunk.js": "/material-todo/static/js/2.75c3a129.chunk.js",
+    "static/js/2.75c3a129.chunk.js.map": "/material-todo/static/js/2.75c3a129.chunk.js.map",
+    "index.html": "/material-todo/index.html",
+    "precache-manifest.6764c36c8f517093c998fcf60324ce8e.js": "/material-todo/precache-manifest.6764c36c8f517093c998fcf60324ce8e.js",
+    "service-worker.js": "/material-todo/service-worker.js"
+  }
+}
