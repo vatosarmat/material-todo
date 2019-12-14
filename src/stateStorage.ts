@@ -1,60 +1,101 @@
-import { createStandardAction, createReducer, ActionType } from 'typesafe-actions';
+import { DeepReadonly } from 'utility-types'
+import { createAction, createReducer, ActionType } from 'typesafe-actions'
 import cuid from 'cuid'
+import { omit } from 'lodash'
 
+import { TodoItemType, pickTodoItemFields } from 'helpers'
 
-//toggle, edit, remove
-export interface ItemId {
-  readonly id: string
-}
-
-//add
-export interface ItemData {
-  readonly title: string
-  readonly description?: string
-}
-
-//state
-export interface Item extends ItemId, ItemData {
-  readonly done: boolean
-}
-
-export interface State {
-  items: ReadonlyArray<Item>
-}
+export type State = DeepReadonly<{
+  items: Record<string, TodoItemType>
+}>
 
 const defaultState: State = {
-  items: [],
-};
-
-const itemAction = {
-  add: createStandardAction('ITEM/ADD')<ItemData>(),
-  toggle: createStandardAction('ITEM/TOGGLE')<ItemId>(),
-  remove: createStandardAction('ITEM/REMOVE')<ItemId>(),
-  edit: createStandardAction('ITEM/EDIT')<ItemId & ItemData>()
+  items: {}
 }
 
-type RootAction = ActionType<typeof itemAction>
+export const todoActions = {
+  add: createAction('ITEM/ADD', (title: string, description?: string) =>
+    description
+      ? {
+          title,
+          description
+        }
+      : { title }
+  )(),
+  toggle: createAction('ITEM/TOGGLE')<string>(),
+  remove: createAction('ITEM/REMOVE')<string>(),
+  edit: createAction('ITEM/EDIT', (id: string, title: string, description?: string) =>
+    description
+      ? {
+          id,
+          title,
+          description
+        }
+      : { id, title }
+  )()
+}
 
-const reducer = createReducer<State, RootAction>(defaultState, {
-  'ITEM/ADD': (state, {payload}) => ({
+export type RootAction = ActionType<typeof todoActions>
+
+export default createReducer<State, RootAction>(defaultState, {
+  'ITEM/ADD': (state, { payload }) => {
+    const id = 'item_' + cuid.slug()
+
+    return {
+      ...state,
+      items: {
+        ...state.items,
+        [id]: {
+          id,
+          ...pickTodoItemFields(payload),
+          done: false
+        }
+      }
+    }
+  },
+
+  'ITEM/EDIT': (state, { payload: { id, ...rest } }) => ({
     ...state,
-    items: [...state.items, {id: 'item_'+cuid.slug(), done: false, ...payload}]
+    items: {
+      ...state.items,
+      [id]: {
+        ...state.items[id],
+        ...pickTodoItemFields(rest)
+      }
+    }
   }),
 
-  'ITEM/TOGGLE': (state, {payload}) => ({
+  'ITEM/TOGGLE': (state, { payload: id }) => ({
     ...state,
-    items: state.items.map(item => item.id === payload.id ? {...item, done: !item.done} : item)
+    items: {
+      ...state.items,
+      [id]: {
+        ...state.items[id],
+        done: !state.items[id].done
+      }
+    }
   }),
 
-  'ITEM/REMOVE': (state, {payload}) => ({
+  'ITEM/REMOVE': (state, { payload: id }) => ({
     ...state,
-    items: state.items.filter(item => item.id !== payload.id)
-  }),
-
-  'ITEM/EDIT': (state, {payload}) => ({
-    ...state,
-    items: state.items.map(item => item.id === payload.id ? {...item, ...payload} : item)
+    items: omit(state.items, id)
   })
 })
 
-export {reducer, itemAction}
+const getTodoIds = (state: State) => {
+  return Object.keys(state.items)
+}
+
+const getTodo = (state: State, { id }: { id: string }) => {
+  return state.items[id]
+}
+
+const isTodoDone = (state: State, { id }: { id?: string }) => {
+  return id ? state.items[id].done : false
+}
+
+export const todoSelectors = {
+  getTodoIds,
+  getTodo,
+  isTodoDone
+}
