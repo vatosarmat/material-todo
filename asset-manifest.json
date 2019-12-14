@@ -1,13 +1,19 @@
 {
   "files": {
-    "main.js": "/material-todo/static/js/main.eba2778c.chunk.js",
-    "main.js.map": "/material-todo/static/js/main.eba2778c.chunk.js.map",
-    "runtime~main.js": "/material-todo/static/js/runtime~main.20498bfa.js",
-    "runtime~main.js.map": "/material-todo/static/js/runtime~main.20498bfa.js.map",
-    "static/js/2.75c3a129.chunk.js": "/material-todo/static/js/2.75c3a129.chunk.js",
-    "static/js/2.75c3a129.chunk.js.map": "/material-todo/static/js/2.75c3a129.chunk.js.map",
+    "main.js": "/material-todo/static/js/main.7716081a.chunk.js",
+    "main.js.map": "/material-todo/static/js/main.7716081a.chunk.js.map",
+    "runtime-main.js": "/material-todo/static/js/runtime-main.a6502f15.js",
+    "runtime-main.js.map": "/material-todo/static/js/runtime-main.a6502f15.js.map",
+    "static/js/2.b428a22c.chunk.js": "/material-todo/static/js/2.b428a22c.chunk.js",
+    "static/js/2.b428a22c.chunk.js.map": "/material-todo/static/js/2.b428a22c.chunk.js.map",
     "index.html": "/material-todo/index.html",
-    "precache-manifest.0597ddf576df7841c591ce2abe13ca2c.js": "/material-todo/precache-manifest.0597ddf576df7841c591ce2abe13ca2c.js",
-    "service-worker.js": "/material-todo/service-worker.js"
-  }
+    "precache-manifest.22303432a81e1ac2ebb1eea2a122091d.js": "/material-todo/precache-manifest.22303432a81e1ac2ebb1eea2a122091d.js",
+    "service-worker.js": "/material-todo/service-worker.js",
+    "static/js/2.b428a22c.chunk.js.LICENSE": "/material-todo/static/js/2.b428a22c.chunk.js.LICENSE"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.a6502f15.js",
+    "static/js/2.b428a22c.chunk.js",
+    "static/js/main.7716081a.chunk.js"
+  ]
 }
