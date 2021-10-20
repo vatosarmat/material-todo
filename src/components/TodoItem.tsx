@@ -38,7 +38,7 @@ interface DispatchProps {
 
 type TodoItemProps = OwnProps & StateProps & DispatchProps
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles(_theme => ({
   itemTitle: ({ todo }: TodoItemProps) =>
     todo.done
       ? {
