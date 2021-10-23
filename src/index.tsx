@@ -1,6 +1,5 @@
-import React from 'react'
 import ReactDOM from 'react-dom'
-import { createStore, AnyAction, Store } from 'redux'
+import { createStore, AnyAction, Reducer, Store, CombinedState } from 'redux'
 import { Provider } from 'react-redux'
 import CssBaseline from '@material-ui/core/CssBaseline'
 import { slug } from 'cuid'
@@ -48,6 +47,8 @@ const demoItems = [
   }
 ]
 
+type StateFromReducer<T> = T extends Reducer<infer S, any> ? S : never
+
 const store = createStore(
   pReducer,
   {
@@ -58,10 +59,10 @@ const store = createStore(
       }),
       {}
     )
-  },
+  } as CombinedState<StateFromReducer<typeof pReducer>>,
   composeWithDevTools()
 )
-const persistor = persistStore((store as unknown) as Store<State, AnyAction>)
+const persistor = persistStore(store as unknown as Store<State, AnyAction>)
 
 ReactDOM.render(
   <Provider store={store}>
