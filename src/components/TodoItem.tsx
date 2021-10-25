@@ -27,6 +27,7 @@ interface OwnProps {
   id: string
   selected: boolean
   edited: boolean
+  disabled: boolean
   onMoreClick: (evt: React.MouseEvent<HTMLButtonElement>) => void
   onEditorApply: (title: string, description?: string) => void
   onEditorCancel: () => void
@@ -52,6 +53,7 @@ const TodoItem: React.FC<TodoItemProps> = props => {
     id,
     selected,
     edited,
+    disabled,
     onMoreClick,
     onEditorApply,
     onEditorCancel,
@@ -66,10 +68,10 @@ const TodoItem: React.FC<TodoItemProps> = props => {
   }
 
   return (
-    <ListItem divider selected={selected} disabled={done}>
+    <ListItem divider selected={selected} disabled={disabled || done}>
       <ListItemIcon>
         <Checkbox
-          disabled={selected}
+          disabled={disabled || selected}
           color="default"
           disableRipple
           checkedIcon={<CheckCircleOutline />}
@@ -98,7 +100,7 @@ const TodoItem: React.FC<TodoItemProps> = props => {
         />
       )}
       <ListItemSecondaryAction>
-        <IconButton onClick={onMoreClick} disabled={edited}>
+        <IconButton onClick={onMoreClick} disabled={disabled || edited}>
           <MoreVert color="action" fontSize="inherit" />
         </IconButton>
       </ListItemSecondaryAction>

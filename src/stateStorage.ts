@@ -1,7 +1,7 @@
 import { DeepReadonly } from 'utility-types'
 import { createAction, createReducer, ActionType } from 'typesafe-actions'
 import cuid from 'cuid'
-import { omit } from 'lodash'
+import { omit, omitBy } from 'lodash'
 
 import { TodoItemType, pickTodoItemFields } from 'helpers'
 
@@ -24,6 +24,7 @@ export const todoActions = {
   )(),
   toggle: createAction('ITEM/TOGGLE')<string>(),
   remove: createAction('ITEM/REMOVE')<string>(),
+  clear: createAction('ITEM/CLEAR')(),
   edit: createAction('ITEM/EDIT', (id: string, title: string, description?: string) =>
     description
       ? {
@@ -79,11 +80,24 @@ export default createReducer<State, RootAction>(defaultState, {
   'ITEM/REMOVE': (state, { payload: id }) => ({
     ...state,
     items: omit(state.items, id)
+  }),
+
+  'ITEM/CLEAR': state => ({
+    ...state,
+    items: omitBy(state.items, item => item.done)
   })
 })
 
 const getTodoIds = (state: State) => {
   return Object.keys(state.items)
+}
+
+const getDoneTodoIds = (state: State) => {
+  return new Set(
+    Object.values(state.items)
+      .filter(item => item.done)
+      .map(({ id }) => id)
+  )
 }
 
 const getTodo = (state: State, { id }: { id: string }) => {
@@ -96,6 +110,7 @@ const isTodoDone = (state: State, { id }: { id?: string }) => {
 
 export const todoSelectors = {
   getTodoIds,
+  getDoneTodoIds,
   getTodo,
   isTodoDone
 }

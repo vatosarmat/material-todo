@@ -1,23 +1,25 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import { List, Collapse } from '@material-ui/core'
+import { List, Collapse, Button } from '@material-ui/core'
 
 import TodoItem from './TodoItem'
 import TodoNewItem from './TodoNewItem'
 import TodoItemMenu from './TodoItemMenu'
 import { todoActions, todoSelectors, State } from 'stateStorage'
 
-const { remove: removeTodo, edit: editTodo, add: addTodo } = todoActions
-const { getTodoIds } = todoSelectors
+const { remove: removeTodo, edit: editTodo, add: addTodo, clear: clearTodos } = todoActions
+const { getTodoIds, getDoneTodoIds } = todoSelectors
 
 interface StateProps {
   todoIds: string[]
+  doneTodoIds: Set<string>
 }
 
 interface DispatchProps {
   removeTodo: typeof removeTodo
   editTodo: typeof editTodo
   addTodo: typeof addTodo
+  clearTodos: typeof clearTodos
 }
 
 type TodoListProps = StateProps & DispatchProps
@@ -28,16 +30,20 @@ interface TodoListState {
   menuAnchor?: HTMLElement
   activeItemId?: string
   activeItemStatus?: 'REMOVE_ANIMATION' | 'EDIT' | 'MENU' | 'ADD'
+  clearing: boolean
 }
 
 class TodoList extends React.Component<TodoListProps, TodoListState> {
-  state: TodoListState = {}
+  state: TodoListState = { clearing: false }
+
+  clearing?: Set<string>
 
   resetActiveItem = () => {
     this.setState({
       menuAnchor: undefined,
       activeItemId: undefined,
-      activeItemStatus: undefined
+      activeItemStatus: undefined,
+      clearing: false
     })
   }
 
@@ -48,7 +54,8 @@ class TodoList extends React.Component<TodoListProps, TodoListState> {
         ? state
         : {
             activeItemId: NEW_ITEM,
-            activeItemStatus: 'ADD'
+            activeItemStatus: 'ADD',
+            clearing: false
           }
     )
   }
@@ -108,6 +115,13 @@ class TodoList extends React.Component<TodoListProps, TodoListState> {
     )
   }
 
+  handleClear = () => {
+    this.setState(state => ({
+      ...state,
+      clearing: true
+    }))
+  }
+
   handleMenuClose = () => {
     this.resetActiveItem()
   }
@@ -118,22 +132,43 @@ class TodoList extends React.Component<TodoListProps, TodoListState> {
     this.resetActiveItem()
   }
 
+  handleClearingAnimation = (id: string) => {
+    const { clearTodos, doneTodoIds } = this.props
+
+    if (!this.clearing) {
+      this.clearing = new Set(doneTodoIds)
+    }
+
+    this.clearing.delete(id)
+    if (this.clearing.size === 0) {
+      this.clearing = undefined
+      clearTodos()
+      this.setState({ clearing: false })
+    }
+  }
+
   render() {
-    const { todoIds } = this.props
-    const { activeItemStatus, activeItemId, menuAnchor } = this.state
+    const { todoIds, doneTodoIds } = this.props
+
+    const { activeItemStatus, activeItemId, menuAnchor, clearing } = this.state
+
+    const collapseProps = clearing
+      ? (todoId: string) => ({
+          in: !(clearing && doneTodoIds.has(todoId)),
+          onExited: this.handleClearingAnimation.bind(null, todoId)
+        })
+      : (todoId: string) => ({
+          in: !(activeItemId === todoId && activeItemStatus === 'REMOVE_ANIMATION'),
+          onExited: this.handleRemoveAnimationDone.bind(null, todoId)
+        })
 
     return (
       <>
         <List>
           {todoIds.map(todoId => (
-            <Collapse
-              enter={false}
-              appear={false}
-              key={todoId}
-              in={!(activeItemId === todoId && activeItemStatus === 'REMOVE_ANIMATION')}
-              onExited={this.handleRemoveAnimationDone.bind(null, todoId)}
-            >
+            <Collapse enter={false} appear={false} key={todoId} {...collapseProps(todoId)}>
               <TodoItem
+                disabled={clearing}
                 selected={todoId === activeItemId}
                 edited={todoId === activeItemId && activeItemStatus === 'EDIT'}
                 id={todoId}
@@ -145,12 +180,17 @@ class TodoList extends React.Component<TodoListProps, TodoListState> {
           ))}
           <TodoNewItem
             editorOpened={activeItemId === 'NEW_ITEM' && activeItemStatus === 'ADD'}
-            disabled={Boolean(activeItemId && activeItemId !== 'NEW_ITEM')}
+            disabled={Boolean(clearing) || Boolean(activeItemId && activeItemId !== 'NEW_ITEM')}
             onNewItemClick={this.handleNewItemClick}
             onEditorApply={this.handleNewItemApply}
             onEditorCancel={this.handleNewItemCancel}
           />
         </List>
+        {doneTodoIds.size > 0 && (
+          <Button size="small" onClick={this.handleClear}>
+            Clear done
+          </Button>
+        )}
         <TodoItemMenu
           itemId={activeItemStatus === 'MENU' ? activeItemId : undefined}
           anchorEl={menuAnchor}
@@ -165,11 +205,13 @@ class TodoList extends React.Component<TodoListProps, TodoListState> {
 
 export default connect<StateProps, DispatchProps, {}, State>(
   state => ({
-    todoIds: getTodoIds(state)
+    todoIds: getTodoIds(state),
+    doneTodoIds: getDoneTodoIds(state)
   }),
   {
     removeTodo,
     editTodo,
-    addTodo
+    addTodo,
+    clearTodos
   }
 )(TodoList)
