@@ -14,13 +14,14 @@ jobs:
         run: |
           git config --global user.name $user_name
           git config --global user.email $user_email
-          git remote set-url origin https://${github_token}@github.com/${github.repository}
+          git remote set-url origin https://${gh_pages_deploy_token}@github.com/${repo}
           yarn
           yarn deploy
         env:
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
-          github_token: ${{ secrets.GH_PAGES_DEPLOY }}
+          repo: ${{github.repository}}
+          gh_pages_deploy_token: ${{ secrets.GH_PAGES_DEPLOY }}
 
 
 
