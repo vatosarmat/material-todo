@@ -36,7 +36,13 @@ const TodoNewItem: React.FC<TodoNewItemProps> = ({
   }
 
   return (
-    <Tooltip title="Click to add new TODO item" enterDelay={3000} leaveDelay={250}>
+    <Tooltip
+      title="Click to add new TODO item"
+      interactive={false}
+      enterDelay={2000}
+      enterNextDelay={2000}
+      leaveDelay={250}
+    >
       <ListItem button divider disabled={disabled} onClick={onNewItemClick}>
         {icon}
       </ListItem>
