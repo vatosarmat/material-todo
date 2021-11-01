@@ -80,7 +80,7 @@ export default createReducer<State, RootAction>(defaultState, {
     ...state,
     items: Object.values(state.items).reduce<Record<string, TodoItemType>>((newItems, item) => {
       if (item.id !== id) {
-        newItems[id] = item
+        newItems[item.id] = item
       }
       return newItems
     }, {})
