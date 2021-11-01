@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.js": "/material-todo/static/js/main.cb728000.chunk.js",
-    "main.js.map": "/material-todo/static/js/main.cb728000.chunk.js.map",
+    "main.js": "/material-todo/static/js/main.a1e4c51f.chunk.js",
+    "main.js.map": "/material-todo/static/js/main.a1e4c51f.chunk.js.map",
     "runtime-main.js": "/material-todo/static/js/runtime-main.b273be14.js",
     "runtime-main.js.map": "/material-todo/static/js/runtime-main.b273be14.js.map",
     "static/js/2.dd1bcecb.chunk.js": "/material-todo/static/js/2.dd1bcecb.chunk.js",
@@ -12,6 +12,6 @@
   "entrypoints": [
     "static/js/runtime-main.b273be14.js",
     "static/js/2.dd1bcecb.chunk.js",
-    "static/js/main.cb728000.chunk.js"
+    "static/js/main.a1e4c51f.chunk.js"
   ]
 }
