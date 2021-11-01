@@ -27,7 +27,7 @@ interface OwnProps {
   id: string
   selected: boolean
   edited: boolean
-  disabled: boolean
+  disabled?: boolean
   onMoreClick: (evt: React.MouseEvent<HTMLButtonElement>) => void
   onEditorApply: (title: string, description?: string) => void
   onEditorCancel: () => void

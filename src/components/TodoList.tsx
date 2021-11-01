@@ -168,7 +168,6 @@ class TodoList extends React.Component<TodoListProps, TodoListState> {
           {todoIds.map(todoId => (
             <Collapse enter={false} appear={false} key={todoId} {...collapseProps(todoId)}>
               <TodoItem
-                disabled={clearing}
                 selected={todoId === activeItemId}
                 edited={todoId === activeItemId && activeItemStatus === 'EDIT'}
                 id={todoId}
@@ -188,7 +187,7 @@ class TodoList extends React.Component<TodoListProps, TodoListState> {
         </List>
         {doneTodoIds.size > 0 && (
           <Button size="small" onClick={this.handleClear}>
-            Clear done
+            Clear
           </Button>
         )}
         <TodoItemMenu

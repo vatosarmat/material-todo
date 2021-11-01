@@ -1,7 +1,6 @@
 import { DeepReadonly } from 'utility-types'
 import { createAction, createReducer, ActionType } from 'typesafe-actions'
 import cuid from 'cuid'
-import { omit, omitBy } from 'lodash'
 
 import { TodoItemType, pickTodoItemFields } from 'helpers'
 
@@ -79,12 +78,22 @@ export default createReducer<State, RootAction>(defaultState, {
 
   'ITEM/REMOVE': (state, { payload: id }) => ({
     ...state,
-    items: omit(state.items, id)
+    items: Object.values(state.items).reduce<Record<string, TodoItemType>>((newItems, item) => {
+      if (item.id !== id) {
+        newItems[id] = item
+      }
+      return newItems
+    }, {})
   }),
 
   'ITEM/CLEAR': state => ({
     ...state,
-    items: omitBy(state.items, item => item.done)
+    items: Object.values(state.items).reduce<Record<string, TodoItemType>>((newItems, item) => {
+      if (!item.done) {
+        newItems[item.id] = item
+      }
+      return newItems
+    }, {})
   })
 })
 
